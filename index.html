@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=1920, initial-scale=1, viewport-fit=cover"/>
+<title>Painel TV 16:9 • Notícias & PSNE</title>
+<link rel="preconnect" href="https://api.open-meteo.com">
+<link rel="preconnect" href="https://api.allorigins.win">
+<style>
+  :root{
+    --bg:#0b1b2b; --panel:#0e2134; --muted:#8fb2df; --text:#eaf2ff; --accent:#4cc0ff; --ring:rgba(255,255,255,.12);
+    --fs-xxl: clamp(28px, 2.2vw, 44px);
+    --fs-xl:  clamp(22px, 1.8vw, 36px);
+    --fs-lg:  clamp(18px, 1.4vw, 28px);
+    --fs-md:  clamp(15px, 1.1vw, 22px);
+    --fs-sm:  clamp(13px, 0.9vw, 18px);
+  }
+  *{box-sizing:border-box} html,body{height:100%}
+  body{
+    margin:0; color:var(--text);
+    font-family: Inter, Roboto, "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: radial-gradient(1400px 900px at 70% 30%, #0e2a44 0%, #0b1b2b 60%) fixed;
+  }
+  .wrap{ width:100vw; height:100vh; padding:18px; display:grid; gap:18px; grid-template-rows: 120px 1fr }
+
+  /* ===== CABEÇALHO (mantido) ===== */
+  header{ display:grid; grid-template-columns: 120px 1fr; gap:18px }
+  .logo-box{
+    display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.04);
+    border:1px solid var(--ring); border-radius:14px;
+  }
+  .logo-box img{ width:88px; height:88px; object-fit:contain }
+  .meta{ display:grid; grid-template-columns: 1.2fr 1fr 1fr; gap:14px }
+  .meta-card{
+    background:rgba(255,255,255,.04); border:1px solid var(--ring); border-radius:14px; padding:14px 18px;
+    display:flex; align-items:center; gap:18px;
+  }
+  .time-wrap .time{ font-size: var(--fs-xxl); font-weight:800; letter-spacing:.04em }
+  .time-wrap .date{ font-size: var(--fs-sm); color:var(--muted) }
+  .weather-wrap{ display:flex; align-items:center; gap:14px }
+  .w-ico{ font-size: var(--fs-xl) } .w-temp{ font-size: var(--fs-xl); font-weight:800 } .w-city{ font-size: var(--fs-sm); color:var(--muted) }
+  .forecast-grid{ display:grid; grid-auto-flow:column; gap:16px; width:100% }
+  .f-item{ display:grid; gap:6px } .f-label{ font-size: var(--fs-sm); color:var(--muted); letter-spacing:.08em; text-transform:uppercase } .f-value{ font-size: var(--fs-lg); font-weight:700 }
+
+  /* ===== CONTEÚDO 50% / 50% ===== */
+  .content{ display:grid; gap:18px; grid-template-columns: 1fr 1fr; grid-auto-rows: 1fr }
+  .panel{
+    background:rgba(255,255,255,.04); border:1px solid var(--ring); border-radius:16px; padding:16px;
+    display:flex; flex-direction:column; gap:12px; min-height:0;
+  }
+  .panel h3{ margin:0; font-size: var(--fs-sm); letter-spacing:.14em; text-transform:uppercase; color:var(--muted) }
+  .sub{ font-size: var(--fs-sm); color: var(--muted) }
+
+  /* Notícias: 2 por vez, imagem + manchete */
+  .news-list{ display:grid; gap:12px; grid-template-rows: 1fr 1fr; min-height:0 }
+  .news-card{
+    display:grid; grid-template-columns: 28% 1fr; gap:14px; align-items:center;
+    background:var(--panel); border:1px solid var(--ring); border-radius:12px; padding:12px; min-height:0;
+  }
+  .thumb{ width:100%; height:100%; min-height:120px; object-fit:cover; border-radius:8px; background:#16324a }
+  .headline{ font-size: var(--fs-lg); font-weight:800; margin:0 0 6px; line-height:1.25 }
+  .snippet{ font-size: var(--fs-sm); color:var(--muted); margin:0 }
+  .src-badge{ font-size: var(--fs-sm); color:var(--muted) }
+
+  /* PSNE: 2 cards por vez, rotacionando */
+  .psne-grid{ display:grid; gap:12px; grid-template-rows: 1fr 1fr; min-height:0 }
+  .card{
+    background:var(--panel); border:1px solid var(--ring); border-radius:12px; padding:14px;
+    display:grid; grid-template-columns: 52px 1fr; gap:14px; align-items:flex-start; min-height:0;
+  }
+  .ico{ font-size: 34px; line-height:1; display:flex; align-items:center; justify-content:center }
+  .card h4{ margin:0 0 6px; font-size: var(--fs-md) }
+  .card ul{ margin:0; padding-left:18px; font-size: var(--fs-sm); color:var(--muted); line-height:1.55 }
+  .pill{ display:inline-block; padding:.25em .6em; border:1px solid var(--ring); border-radius:999px; margin-right:6px; font-size: var(--fs-sm); color:var(--muted) }
+
+  /* Scrollbar sutil */
+  ::-webkit-scrollbar{height:10px;width:10px} ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ===== CABEÇALHO (igual aprovado) ===== -->
+  <header>
+    <div class="logo-box">
+      <img src="./logo-branco-transparente-quadrado.png" alt="Logo">
+    </div>
+
+    <div class="meta">
+      <div class="meta-card time-wrap">
+        <div class="time" id="nowTime">--:--</div>
+        <div class="date" id="nowDate">---</div>
+      </div>
+
+      <div class="meta-card weather-wrap" title="Atualiza ~5 min">
+        <div class="w-ico" id="wIcon">⛅</div>
+        <div class="w-temp" id="wTemp">--°</div>
+        <div class="w-city" id="wCity">Localizando…</div>
+      </div>
+
+      <div class="meta-card">
+        <div class="forecast-grid" style="width:100%">
+          <div class="f-item">
+            <div class="f-label">Vento (próx. 6h)</div>
+            <div class="f-value" id="windNext">— km/h</div>
+          </div>
+          <div class="f-item">
+            <div class="f-label">Chuva (prob. máx 6h)</div>
+            <div class="f-value" id="rainNext">— %</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== CONTEÚDO 50% / 50% ===== -->
+  <section class="content">
+
+    <!-- Notícias (2 por vez) -->
+    <section class="panel" id="news">
+      <h3>Notícias</h3>
+      <div class="sub src-badge" id="news-src">TechCrunch • The Verge • Ars • The Register • DCD</div>
+      <div class="news-list" id="news-list">
+        <!-- preenchido via JS -->
+      </div>
+    </section>
+
+    <!-- PSNE (2 por vez, rotaciona a cada 10s) -->
+    <section class="panel" id="psne">
+      <h3>Produtos & Serviços</h3>
+      <div class="sub">
+        <span class="pill">Consultoria</span>
+        <span class="pill">Implantação</span>
+        <span class="pill">Soluções</span>
+        <span class="pill">Suporte</span>
+        <span class="pill">NOC 24×7</span>
+        <span class="pill">Campo</span>
+      </div>
+      <div class="psne-grid" id="psne-grid">
+        <!-- preenchido via JS -->
+      </div>
+    </section>
+
+  </section>
+</div>
+
+<script>
+(() => {
+  /* ===== Relógio ===== */
+  function startClock(){
+    const t = document.getElementById('nowTime');
+    const d = document.getElementById('nowDate');
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const tick = () => {
+      const now = new Date();
+      t.textContent = now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+      d.textContent = now.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric', timeZone: tz});
+    };
+    tick(); setInterval(tick, 1000);
+  }
+
+  /* ===== Clima / Vento / Chuva (Open-Meteo, com índice horário correto) ===== */
+  function iconFromCode(code,isDay){
+    const sun="☀️",moon="🌙",cloud="⛅",over="☁️",rain="🌧️",tstorm="⛈️",snow="❄️",fog="🌫️";
+    const day=isDay?sun:moon;
+    if ([0].includes(code)) return day;
+    if ([1,2].includes(code)) return cloud;
+    if ([3].includes(code)) return over;
+    if ([45,48].includes(code)) return fog;
+    if ([51,53,55,56,57,61,63,65,80,81,82].includes(code)) return rain;
+    if ([66,67,71,73,75,77,85,86].includes(code)) return snow;
+    if ([95,96,99].includes(code)) return tstorm;
+    return "⛅";
+  }
+  async function getCoords(){
+    return new Promise(resolve=>{
+      const fallback={name:"São Paulo, BR",lat:-23.5505,lon:-46.6333,tz:"America/Sao_Paulo"};
+      const done=(lat,lon,name)=>resolve({lat,lon,name,tz:Intl.DateTimeFormat().resolvedOptions().timeZone||fallback.tz});
+      if(!navigator.geolocation) return done(fallback.lat,fallback.lon,fallback.name);
+      navigator.geolocation.getCurrentPosition(async p=>{
+        const {latitude:lat,longitude:lon}=p.coords;
+        try{
+          const r=await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=pt`);
+          const j=await r.json(); const city=j.city||j.locality||j.principalSubdivision||"Local";
+          done(lat,lon, `${city}${j.countryCode?`, ${j.countryCode}`:''}`);
+        }catch{ done(lat,lon,fallback.name); }
+      }, ()=>done(fallback.lat,fallback.lon,fallback.name), {timeout:5000});
+    });
+  }
+  function findHourIndex(hourlyTimes){
+    const now = new Date();
+    // encontra índice cujo horário seja o primeiro >= agora
+    let idx = hourlyTimes.findIndex(t => new Date(t).getTime() >= now.getTime());
+    if (idx === -1) idx = 0;
+    return idx;
+  }
+  async function loadWeather(){
+    const wI=document.getElementById('wIcon');
+    const wT=document.getElementById('wTemp');
+    const wC=document.getElementById('wCity');
+    const windEl=document.getElementById('windNext');
+    const rainEl=document.getElementById('rainNext');
+
+    try{
+      const loc=await getCoords();
+      const params=new URLSearchParams({
+        latitude: String(loc.lat),
+        longitude: String(loc.lon),
+        current_weather:'true',
+        hourly:'temperature_2m,windspeed_10m,precipitation_probability',
+        windspeed_unit:'kmh',
+        timezone: loc.tz
+      });
+      const j=await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`).then(r=>r.json());
+      const cw=j.current_weather;
+      wI.textContent=iconFromCode(cw.weathercode, cw.is_day===1);
+      wT.textContent=`${Math.round(cw.temperature)}°`;
+      wC.textContent=loc.name;
+
+      const times = j.hourly.time || [];
+      const i0 = findHourIndex(times);
+      const i1 = Math.min(times.length-1, i0 + 5);
+
+      const winds = (j.hourly.windspeed_10m||[]).slice(i0, i1+1).filter(v=>typeof v==='number');
+      const rains = (j.hourly.precipitation_probability||[]).slice(i0, i1+1).filter(v=>typeof v==='number');
+
+      const windAvg = winds.length ? (winds.reduce((a,b)=>a+b,0)/winds.length) : null;
+      const rainMax = rains.length ? Math.max(...rains) : null;
+
+      windEl.textContent = windAvg!=null ? `${Math.round(windAvg)} km/h` : "—";
+      rainEl.textContent = rainMax!=null ? `${Math.round(rainMax)}%` : "—";
+    }catch{
+      wI.textContent="⛅"; wT.textContent="—"; wC.textContent="Indisp.";
+      windEl.textContent="—"; rainEl.textContent="—";
+    }
+  }
+
+  /* ===== Notícias (RSS) — 2 por vez, rotaciona a cada 10s ===== */
+  const PROXY = (u)=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`;
+  const FEEDS = [
+    {name:"TechCrunch", url:"https://techcrunch.com/feed/"},
+    {name:"The Verge", url:"https://www.theverge.com/rss/index.xml"},
+    {name:"Ars Technica", url:"https://feeds.arstechnica.com/arstechnica/index"},
+    {name:"The Register (Networks)", url:"https://www.theregister.com/networks/headlines.atom"},
+    {name:"DataCenterDynamics", url:"https://www.datacenterdynamics.com/en/rss/"}
+  ];
+  const clean = s=>(s||"").replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim();
+  const pickImg = t=>`https://picsum.photos/seed/${encodeURIComponent((t||'img').slice(0,24))}/640/384`;
+
+  async function fetchRSS(url){
+    const txt=await fetch(PROXY(url),{cache:"no-store"}).then(r=>r.text());
+    const xml=new DOMParser().parseFromString(txt,"text/xml");
+    const isAtom=xml.documentElement.nodeName.toLowerCase().includes("feed");
+    const items=[];
+    if(isAtom){
+      xml.querySelectorAll("entry").forEach(e=>{
+        items.push({title:e.querySelector("title")?.textContent?.trim(),
+          link:e.querySelector("link")?.getAttribute("href"),
+          desc:clean(e.querySelector("summary")?.textContent || e.querySelector("content")?.textContent),
+          pub:e.querySelector("updated, published")?.textContent? new Date(e.querySelector("updated, published").textContent):null});
+      });
+    }else{
+      xml.querySelectorAll("item").forEach(it=>{
+        items.push({title:it.querySelector("title")?.textContent?.trim(),
+          link:it.querySelector("link")?.textContent?.trim(),
+          desc:clean(it.querySelector("description")?.textContent || it.querySelector("content\\:encoded")?.textContent),
+          pub:it.querySelector("pubDate")?.textContent? new Date(it.querySelector("pubDate").textContent):null});
+      });
+    }
+    items.sort((a,b)=>(b.pub?.getTime()||0)-(a.pub?.getTime()||0));
+    return items;
+  }
+
+  let allNews = []; let newsPtr = 0; let newsTimer=null;
+  async function loadNews(){
+    try{
+      const chunks = await Promise.allSettled(FEEDS.map(f=>fetchRSS(f.url)));
+      allNews = chunks.filter(x=>x.status==="fulfilled").flatMap(x=>x.value);
+      // fallback se vazio
+      if (!allNews.length) allNews = [];
+      newsPtr = 0;
+      renderNews();
+    }catch{
+      allNews = []; renderNews();
+    }
+  }
+  function renderNews(){
+    const el = document.getElementById('news-list');
+    if (allNews.length === 0){
+      el.innerHTML = `<div class="news-card"><div></div><div><h4 class="headline">Sem itens agora</h4><p class="snippet">Tente novamente mais tarde.</p></div></div>`;
+      return;
+    }
+    // pega 2 itens circulando
+    const a = allNews[newsPtr % allNews.length];
+    const b = allNews[(newsPtr+1) % allNews.length];
+    newsPtr = (newsPtr + 2) % allNews.length;
+
+    const card = (x)=>`
+      <article class="news-card">
+        <img class="thumb" src="${pickImg(x.title)}" alt="">
+        <div>
+          <h4 class="headline"><a href="${x.link||'#'}" target="_blank" rel="noopener" style="color:var(--text);text-decoration:none">${x.title||'Sem título'}</a></h4>
+          <p class="snippet">${(x.desc||'').slice(0,180)}</p>
+        </div>
+      </article>`;
+
+    el.innerHTML = card(a) + card(b);
+  }
+
+  /* ===== PSNE (2 por vez, rotaciona a cada 10s) ===== */
+  const PSNE_PRODUCTS = [
+    { icon:"🧭", title:"Consultoria & Engenharia", items:[
+      "Assessments orientados a risco e investimento (matriz GUT)",
+      "Arquiteturas IP/MPLS, BNG/CGNAT, SRv6, Telco Cloud",
+      "HLD/LLD, blueprint multi-vendor e roteiros de migração"
+    ]},
+    { icon:"⚙️", title:"Implantação & Automação", items:[
+      "EVPN/VXLAN em data centers cloud-scale",
+      "Automação GitOps / API-first, CI/CD de rede",
+      "Validações pré/pós-mudança (ZM/GMUD) e runbooks"
+    ]},
+    { icon:"🧩", title:"Venda de Soluções", items:[
+      "Switching/Routing, DWDM, Firewalls, Wi-Fi 6/6E",
+      "Ópticos/transceivers e cabos validados",
+      "Licenças e subscrições (multi-fabricantes)"
+    ]},
+    { icon:"🛡️", title:"Suporte & Manutenção", items:[
+      "Sustentação, PSIRT e hardening",
+      "Gestão de chamados com fabricantes",
+      "Relatórios mensais com KPIs e recomendações"
+    ]},
+    { icon:"🛰️", title:"NOC 24×7 & Observabilidade", items:[
+      "PSNE Observer (AIOps/FinOps) & dashboards executivos",
+      "Correlação de eventos e redução de ruído",
+      "SLA orientado a valor, SRE e SLOs por serviço"
+    ]},
+    { icon:"🛠️", title:"Serviços de Campo (Fibra & DWDM)", items:[
+      "Ativações, troubleshooting, medições e OTDR",
+      "Janelas noturnas e mobilização regional",
+      "Documentação ‘as-built’ e atualização da CMDB"
+    ]}
+  ];
+  let psnePtr = 0; let psneTimer=null;
+  function renderPSNE(){
+    const el = document.getElementById('psne-grid');
+    const a = PSNE_PRODUCTS[psnePtr % PSNE_PRODUCTS.length];
+    const b = PSNE_PRODUCTS[(psnePtr+1) % PSNE_PRODUCTS.length];
+    psnePtr = (psnePtr + 2) % PSNE_PRODUCTS.length;
+
+    const card = (c)=>`
+      <div class="card">
+        <div class="ico">${c.icon}</div>
+        <div>
+          <h4>${c.title}</h4>
+          <ul>${c.items.map(i=>`<li>${i}</li>`).join("")}</ul>
+        </div>
+      </div>`;
+    el.innerHTML = card(a) + card(b);
+  }
+
+  /* ===== Boot ===== */
+  document.addEventListener('DOMContentLoaded', ()=>{
+    startClock();
+    loadWeather(); setInterval(loadWeather, 5*60*1000);
+
+    loadNews().then(()=>{
+      renderNews();
+      if (newsTimer) clearInterval(newsTimer);
+      newsTimer = setInterval(renderNews, 10_000); // 2 notícias a cada 10s
+      // refresh total do feed a cada 15 min
+      setInterval(loadNews, 15*60*1000);
+    });
+
+    renderPSNE();
+    if (psneTimer) clearInterval(psneTimer);
+    psneTimer = setInterval(renderPSNE, 10_000); // rotaciona 2 cards a cada 10s
+  });
+})();
+</script>
+</body>
+</html>
