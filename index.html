@@ -1,223 +1,405 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Tech News Rotativo — RSS</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>PSNE • Painel</title>
+<link rel="preconnect" href="https://api.allorigins.win">
+<link rel="preconnect" href="https://api.coingecko.com">
+<link rel="preconnect" href="https://api.exchangerate.host">
+<link rel="preconnect" href="https://query1.finance.yahoo.com">
+<link rel="preconnect" href="https://api.open-meteo.com">
 <style>
-  :root{--bg:#0b1b2b;--card:#0e2134;--muted:#7ea0c9;--text:#e8f0fa;--accent:#4cc0ff}
-  *{box-sizing:border-box} html,body{height:100%}
-  body{margin:0;font-family:Inter,Roboto,system-ui,-apple-system,sans-serif;background:#0b1b2b;color:var(--text)}
-  .wrap{min-height:100vh;display:grid;grid-template-rows:80px auto 80px;gap:18px;padding:24px}
-  .top{display:flex;align-items:center;gap:16px}
-  .brand{font-weight:800;letter-spacing:.06em;font-size:26px}
-  .source{margin-left:auto;background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px 14px;font-size:13px;color:var(--muted)}
-  .main{display:grid;grid-template-columns: minmax(280px, 380px) 1fr; gap:18px; align-items:start}
-  .panel{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px}
-  .panel h3{margin:0 0 10px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-  .headline{font-size:26px;font-weight:800;line-height:1.25;margin:0 0 12px}
-  .desc{color:var(--muted);margin:0 0 10px}
-  .cta a{color:var(--accent);text-decoration:none;font-weight:600}
-  .list{display:grid;gap:12px;max-height:70vh;overflow:auto;padding-right:4px}
-  .item{display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:center;background:var(--card);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:12px}
-  .thumb{width:120px;height:72px;object-fit:cover;border-radius:8px;background:#17314b}
-  .item h4{margin:0;font-size:15px}
-  .item p{margin:4px 0 0;font-size:12px;color:var(--muted)}
-  .ticker{display:flex;align-items:center;overflow:hidden;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);border-radius:12px}
-  .marquee{white-space:nowrap;animation:slide 28s linear infinite;padding:20px;font-size:18px;color:#dbe8f8}
-  @keyframes slide{from{transform:translateX(100%)}to{transform:translateX(-100%)}}
+  :root{
+    --bg:#0b1b2b; --panel:#0e2134; --muted:#7ea0c9; --text:#e8f0fa;
+    --accent:#4cc0ff; --ok:#36c16b; --bad:#e35b5b;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; color:var(--text);
+    font-family: Inter, Roboto, "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: radial-gradient(1200px 800px at 70% 30%, #0e2a44 0%, #0b1b2b 60%) fixed;
+  }
+  .wrap{
+    min-height:100vh; padding:24px; display:grid; gap:18px;
+    grid-template-rows: 92px auto 64px; /* header • grid • ticker */
+  }
+
+  /* HEADER */
+  header{
+    display:grid; grid-template-columns: auto 1fr auto auto; align-items:center; gap:14px;
+    border:1px solid rgba(255,255,255,.08); border-radius:14px; padding:10px 14px;
+    background:rgba(255,255,255,.03);
+  }
+  header img{ height:56px; width:56px; object-fit:contain }
+  .brand{ font-size:22px; font-weight:800; letter-spacing:.06em }
+  .clock{ margin-left:auto; text-align:right }
+  .clock .time{ font-size:28px; font-weight:800 }
+  .clock .date{ font-size:12px; color:var(--muted) }
+  .weather{
+    display:flex; align-items:center; gap:10px;
+    background:var(--panel); border:1px solid rgba(255,255,255,.08);
+    border-radius:12px; padding:8px 12px; min-width:220px;
+  }
+  .w-ico{ font-size:22px } .w-temp{ font-weight:800; font-size:18px }
+  .w-city{ font-size:12px; color:var(--muted) }
+
+  /* GRID (5 blocos) */
+  .grid{
+    display:grid; gap:18px;
+    grid-template-columns: 1.2fr 1fr 1fr;
+    grid-auto-rows: minmax(180px, auto);
+  }
+  .panel{
+    background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.08);
+    border-radius:16px; padding:16px; display:flex; flex-direction:column; gap:12px;
+    min-height:260px;
+  }
+  .panel h3{ margin:0; font-size:13px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted) }
+  .panel .sub{ font-size:12px; color:var(--muted) }
+
+  /* Finance */
+  .quotes-grid{ display:grid; gap:14px; grid-template-columns: repeat(2, minmax(220px,1fr)) }
+  .quote{ background:var(--panel); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:10px 12px }
+  .quote .top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px }
+  .quote strong{ font-size:14px } .quote small{ color:var(--muted) }
+  .quote .fallback{ display:none; font-variant-numeric:tabular-nums }
+  .delta{ font-size:12px } .delta.up{ color:var(--ok) } .delta.down{ color:var(--bad) }
+
+  /* News lists */
+  .news-list{ display:grid; gap:10px; grid-auto-rows:minmax(0,1fr); overflow:auto; padding-right:4px }
+  .news-item{
+    display:grid; grid-template-columns: 110px 1fr; gap:12px; align-items:center;
+    background:var(--panel); border:1px solid rgba(255,255,255,.06); border-radius:12px; padding:10px;
+  }
+  .news-item img{ width:110px; height:68px; object-fit:cover; border-radius:8px; background:#17314b }
+  .news-item h4{ margin:0; font-size:14px }
+  .news-item p{ margin:4px 0 0; font-size:12px; color:var(--muted) }
+  .news-hero{ font-size:18px; font-weight:800; margin:6px 0 4px }
+  .source-badge{ font-size:12px; color:var(--muted) }
+
+  /* Sobre */
+  .about{ display:grid; grid-template-columns: 120px 1fr; gap:14px; align-items:center }
+  .about img{ width:100%; height:auto } .about p{ margin:0; line-height:1.5 }
+  ul.check{ margin:8px 0 0 18px; padding:0; color:var(--muted) }
+
+  /* FOOTER TICKER */
+  footer.ticker{
+    position:relative; overflow:hidden;
+    border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.06); border-radius:12px;
+  }
+  .marquee{ position:absolute; white-space:nowrap; padding:20px; font-size:18px; color:#dbe8f8; animation:slide 28s linear infinite }
+  @keyframes slide{ from{transform:translateX(100%)} to{transform:translateX(-100%)} }
+
   ::-webkit-scrollbar{height:8px;width:10px} ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:8px}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header class="top">
-    <div class="brand">PSNE • Tech News</div>
-    <div class="source" id="sourceBox">Fonte: —</div>
+
+  <!-- HEADER (logo • brand • clock • weather) -->
+  <header>
+    <img src="./logo-branco-transparente-quadrado.png" alt="PSNE">
+    <div class="brand">PSNE • Painel de Informações</div>
+    <div class="clock">
+      <div class="time" id="nowTime">--:--</div>
+      <div class="date" id="nowDate">---</div>
+    </div>
+    <div class="weather" title="Atualiza a cada ~5 min">
+      <div class="w-ico" id="wIcon">⛅</div>
+      <div class="w-temp" id="wTemp">--°</div>
+      <div class="w-city" id="wCity">Localizando…</div>
+    </div>
   </header>
 
-  <main class="main">
-    <section class="panel">
-      <h3>Em destaque</h3>
-      <h1 class="headline" id="heroTitle">Carregando…</h1>
-      <p class="desc" id="heroDesc">Buscando notícias dos portais selecionados.</p>
-      <div class="cta"><a id="heroLink" href="#" target="_blank" rel="noopener">Ler mais →</a></div>
+  <!-- GRID (5 BLOCOS) -->
+  <section class="grid">
+
+    <!-- 1) FINANCEIROS -->
+    <section class="panel" id="panel-fin">
+      <h3>Financeiros</h3>
+      <div class="sub">USD/BRL • BTC/USD • ANET • SONDA</div>
+      <div class="quotes-grid">
+        <!-- USD/BRL -->
+        <div class="quote">
+          <div class="top"><strong>USD / BRL</strong><small id="src-usdbrl">Investing.com</small></div>
+          <!-- COLE aqui o widget do Investing.com (USD/BRL) se desejar -->
+          <div id="investing-usdbrl"></div>
+          <div class="fallback" id="fb-usdbrl">Último: <b id="usdbrl-val">--</b> • Δ <b id="usdbrl-delta" class="delta">—</b></div>
+        </div>
+        <!-- BTC/USD -->
+        <div class="quote">
+          <div class="top"><strong>BTC / USD</strong><small id="src-btcusd">Investing.com</small></div>
+          <!-- COLE aqui o widget do Investing.com (BTC/USD) se desejar -->
+          <div id="investing-btcusd"></div>
+          <div class="fallback" id="fb-btcusd">Último: <b id="btcusd-val">--</b> • Δ 24h <b id="btcusd-delta" class="delta">—</b></div>
+        </div>
+        <!-- ANET -->
+        <div class="quote">
+          <div class="top"><strong>Arista Networks — ANET</strong><small id="src-anet">Investing.com</small></div>
+          <!-- COLE aqui o widget do Investing.com (ANET) se desejar -->
+          <div id="investing-anet"></div>
+          <div class="fallback" id="fb-anet">Último: <b id="anet-val">--</b> • Δ <b id="anet-delta" class="delta">—</b></div>
+        </div>
+        <!-- SONDA -->
+        <div class="quote">
+          <div class="top"><strong>SONDA S.A. — SONDA.SN</strong><small id="src-sonda">Investing.com</small></div>
+          <!-- COLE aqui o widget do Investing.com (SONDA) se desejar -->
+          <div id="investing-sonda"></div>
+          <div class="fallback" id="fb-sonda">Último: <b id="sonda-val">--</b> • Δ <b id="sonda-delta" class="delta">—</b></div>
+        </div>
+      </div>
     </section>
 
-    <section class="panel">
-      <h3>Últimas do portal atual</h3>
-      <div class="list" id="newsList"></div>
+    <!-- 2) INFORMAÇÕES DE TECNOLOGIA -->
+    <section class="panel" id="panel-tech">
+      <h3>Informações de Tecnologia</h3>
+      <div class="sub source-badge" id="tech-src">TechCrunch • The Verge • Ars</div>
+      <div class="news-hero" id="tech-hero">Carregando…</div>
+      <div class="news-list" id="tech-list"></div>
     </section>
-  </main>
 
+    <!-- 3) TELECOMUNICAÇÕES -->
+    <section class="panel" id="panel-telecom">
+      <h3>Telecomunicações</h3>
+      <div class="sub source-badge" id="tel-src">The Register — Networks</div>
+      <div class="news-hero" id="tel-hero">Carregando…</div>
+      <div class="news-list" id="tel-list"></div>
+    </section>
+
+    <!-- 4) DATA CENTER -->
+    <section class="panel" id="panel-dc">
+      <h3>Data Center</h3>
+      <div class="sub source-badge" id="dc-src">DataCenterDynamics • Data Center Knowledge</div>
+      <div class="news-hero" id="dc-hero">Carregando…</div>
+      <div class="news-list" id="dc-list"></div>
+    </section>
+
+    <!-- 5) SOBRE A PSNE -->
+    <section class="panel" id="panel-about">
+      <h3>Sobre a PSNE</h3>
+      <div class="about">
+        <img src="./logo-branco-transparente-quadrado.png" alt="PSNE">
+        <div>
+          <p><strong>PS Network Experts (PSNE)</strong> — consultoria e integradora <em>technology-first</em> para operadoras, ISPs e empresas. Foco em <strong>redes carrier-class</strong>, <strong>data centers</strong>, <strong>observabilidade com IA</strong>, <strong>NOC/SOC</strong> e <strong>automação</strong>.</p>
+          <ul class="check">
+            <li>Arquiteturas IP/MPLS, BNG/CGNAT, SRv6, Telco Cloud</li>
+            <li>Cloud-scale switching, EVPN/VXLAN, automação GitOps/API-first</li>
+            <li>PSNE Observer (AIOps/FinOps), GAIO DataOS (Data Lake/Analytics)</li>
+            <li>Serviços 24×7, SLAs orientados a valor, runbooks inteligentes</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+  </section>
+
+  <!-- FOOTER TICKER -->
   <footer class="ticker">
-    <div class="marquee" id="ticker">TechCrunch • The Verge • Ars Technica • WIRED • The Register — feed rotativo a cada 20s</div>
+    <div class="marquee" id="ticker">
+      PSNE • 100% Tech, 100% Cliente • Cloud-Scale • Observabilidade com IA • Zero-Touch Ops • SRv6 • EVPN/VXLAN • NOC 24×7 • DataOps • FinOps • Segurança by-design • Edge-to-Cloud
+    </div>
   </footer>
 </div>
 
 <script>
 (() => {
-  // ====== Configuração dos feeds ======
-  const FEEDS = [
-    { name: "TechCrunch",  url: "https://techcrunch.com/feed/" },
-    { name: "The Verge",   url: "https://www.theverge.com/rss/index.xml" },
-    { name: "Ars Technica",url: "https://feeds.arstechnica.com/arstechnica/index" },
-    { name: "WIRED",       url: "https://www.wired.com/feed/rss" },
-    { name: "The Register",url: "https://www.theregister.com/headlines.atom" } // Atom, vamos tratar igual
-  ];
+  /* ========= RELÓGIO ========= */
+  function startClock(){
+    const time = document.getElementById("nowTime");
+    const date = document.getElementById("nowDate");
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const tick = () => {
+      const d = new Date();
+      time.textContent = d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+      date.textContent = d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric', timeZone: tz});
+    };
+    tick(); setInterval(tick, 1000);
+  }
 
-  // Proxy aberto para contornar CORS no browser. Troque por proxy próprio em produção.
-  const PROXY = (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`;
+  /* ========= CLIMA (Open-Meteo, sem API key) ========= */
+  function wIcon(code, isDay){
+    const sun="☀️", moon="🌙", cloud="⛅", over="☁️", rain="🌧️", tstorm="⛈️", snow="❄️", fog="🌫️";
+    const day=isDay?sun:moon;
+    if ([0].includes(code)) return day;
+    if ([1,2].includes(code)) return cloud;
+    if ([3].includes(code)) return over;
+    if ([45,48].includes(code)) return fog;
+    if ([51,53,55,56,57,61,63,65,80,81,82].includes(code)) return rain;
+    if ([66,67,71,73,75,77,85,86].includes(code)) return snow;
+    if ([95,96,99].includes(code)) return tstorm;
+    return "⛅";
+  }
+  async function getCoords(){
+    return new Promise(resolve=>{
+      const fallback = { name:"Miami, FL", lat:25.7617, lon:-80.1918, tz:"America/New_York" };
+      if (!navigator.geolocation) return resolve(fallback);
+      const done = (lat,lon,name)=>resolve({lat,lon,name,tz:Intl.DateTimeFormat().resolvedOptions().timeZone||fallback.tz});
+      navigator.geolocation.getCurrentPosition(async p=>{
+        const {latitude:lat, longitude:lon} = p.coords;
+        try{
+          const r = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
+          const j = await r.json(); const city = j.city || j.locality || j.principalSubdivision || "Local";
+          done(lat,lon, city + (j.countryCode?`, ${j.countryCode}`:""));
+        }catch{ done(lat,lon,fallback.name); }
+      }, ()=>done(fallback.lat, fallback.lon, fallback.name), {timeout:5000});
+    });
+  }
+  async function loadWeather(){
+    const wI=document.getElementById("wIcon"), wT=document.getElementById("wTemp"), wC=document.getElementById("wCity");
+    try{
+      const loc = await getCoords();
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&current_weather=true&timezone=${encodeURIComponent(loc.tz)}`;
+      const j = await fetch(url).then(r=>r.json());
+      const cw = j.current_weather;
+      wI.textContent = wIcon(cw.weathercode, cw.is_day===1);
+      wT.textContent = `${Math.round(cw.temperature)}°`;
+      wC.textContent = loc.name;
+    }catch{
+      wI.textContent = "⛅"; wT.textContent = "—"; wC.textContent = "Indisp.";
+    }
+  }
 
-  const ROTATE_MS = 20_000; // troca de portal a cada 20s
-  const CACHE_TTL = 10 * 60_000; // 10 min
-
-  // ====== Utilitários ======
-  const byId = id => document.getElementById(id);
-  const clean = (html) => (html||"").replace(/<[^>]+>/g,"").replace(/\s+/g," ").trim();
-  const pickImg = (item) => {
-    // tenta achar imagem em <media:content>, <enclosure>, <img> no conteúdo, senão usa picsum
-    const m = item.media?.url || item.enclosure?.url || item.imgFromDesc;
-    if (m) return m;
-    const seed = encodeURIComponent((item.title||"thumb").slice(0,24));
-    return `https://picsum.photos/seed/${seed}/240/144`;
+  /* ========= FINANCEIROS (fallbacks) ========= */
+  const fmt2 = new Intl.NumberFormat('pt-BR',{minimumFractionDigits:2, maximumFractionDigits:2});
+  const fmt4 = new Intl.NumberFormat('pt-BR',{minimumFractionDigits:4, maximumFractionDigits:4});
+  const setDelta = (el, pct) => {
+    if (pct==null || Number.isNaN(pct)){ el.textContent="—"; el.className="delta"; return; }
+    const s=pct>0?"+":""; el.textContent = s + fmt2.format(pct) + "%";
+    el.className = "delta " + (pct>0?"up":pct<0?"down":"");
   };
+  function needsFallback(id){ const el=document.getElementById(id); return new Promise(r=>setTimeout(()=>r(!el || el.childElementCount===0), 2500)); }
 
-  // ====== Cache simples com TTL (localStorage) ======
-  const cache = {
-    get(key){
-      try{
-        const raw = localStorage.getItem(key);
-        if (!raw) return null;
-        const {expires, data} = JSON.parse(raw);
-        if (Date.now() > expires) { localStorage.removeItem(key); return null; }
-        return data;
-      }catch{ return null; }
-    },
-    set(key, data, ttlMs){ localStorage.setItem(key, JSON.stringify({expires: Date.now()+ttlMs, data})) }
-  };
+  async function fxUsdBrl(){
+    const today = await fetch("https://api.exchangerate.host/latest?base=USD&symbols=BRL").then(r=>r.json());
+    const curr = today?.rates?.BRL;
+    const d = new Date(); d.setDate(d.getDate()-1);
+    const y = d.toISOString().slice(0,10);
+    const prevJ = await fetch(`https://api.exchangerate.host/${y}?base=USD&symbols=BRL`).then(r=>r.json());
+    const prev = prevJ?.rates?.BRL;
+    return { value: curr, delta: prev ? ((curr-prev)/prev*100) : null };
+  }
+  async function btcUsd(){
+    const now = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd",{cache:"no-store"}).then(r=>r.json());
+    const price = now?.bitcoin?.usd;
+    const hist = await fetch("https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=1").then(r=>r.json());
+    const series = hist?.prices||[]; const first = series.length? series[0][1] : null;
+    return { value: price, delta: (first && price)? ((price-first)/first*100):null };
+  }
+  async function yahooTicker(ticker){
+    const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?range=1d&interval=1m`).then(r=>r.json());
+    const res = j.chart?.result?.[0];
+    const last = res?.meta?.regularMarketPrice ?? (res?.indicators?.quote?.[0]?.close?.slice(-1)[0]);
+    const open = res?.meta?.chartPreviousClose ?? res?.indicators?.quote?.[0]?.close?.[0];
+    return { value: last, delta: (open && last)? ((last-open)/open*100):null };
+  }
+  async function updateFinance(){
+    if (await needsFallback("investing-usdbrl")){
+      document.getElementById("fb-usdbrl").style.display="block";
+      document.getElementById("src-usdbrl").textContent="Fallback: exchangerate.host";
+      try{ const r=await fxUsdBrl(); document.getElementById("usdbrl-val").textContent=fmt4.format(r.value); setDelta(document.getElementById("usdbrl-delta"), r.delta);}catch{}
+    }
+    if (await needsFallback("investing-btcusd")){
+      document.getElementById("fb-btcusd").style.display="block";
+      document.getElementById("src-btcusd").textContent="Fallback: CoinGecko";
+      try{ const r=await btcUsd(); document.getElementById("btcusd-val").textContent=fmt2.format(r.value); setDelta(document.getElementById("btcusd-delta"), r.delta);}catch{}
+    }
+    if (await needsFallback("investing-anet")){
+      document.getElementById("fb-anet").style.display="block";
+      document.getElementById("src-anet").textContent="Fallback: Yahoo Finance";
+      try{ const r=await yahooTicker("ANET"); document.getElementById("anet-val").textContent=fmt2.format(r.value); setDelta(document.getElementById("anet-delta"), r.delta);}catch{}
+    }
+    if (await needsFallback("investing-sonda")){
+      document.getElementById("fb-sonda").style.display="block";
+      document.getElementById("src-sonda").textContent="Fallback: Yahoo Finance";
+      try{ const r=await yahooTicker("SONDA.SN"); document.getElementById("sonda-val").textContent=fmt2.format(r.value); setDelta(document.getElementById("sonda-delta"), r.delta);}catch{}
+    }
+  }
 
-  // ====== Parser genérico (RSS/Atom) ======
-  function parseFeed(xmlText){
-    const xml = new DOMParser().parseFromString(xmlText, "text/xml");
+  /* ========= FEEDS (RSS via proxy) ========= */
+  const PROXY = (u)=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`;
+  const clean = s => (s||"").replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim();
+  const pickImg = (title)=>`https://picsum.photos/seed/${encodeURIComponent((title||"img").slice(0,24))}/240/140`;
 
-    // Decide se é Atom ou RSS
+  async function fetchRSS(url){
+    const txt = await fetch(PROXY(url), {cache:"no-store"}).then(r=>r.text());
+    const xml = new DOMParser().parseFromString(txt, "text/xml");
     const isAtom = xml.documentElement.nodeName.toLowerCase().includes("feed");
-    const items = [];
-
+    const items=[];
     if (isAtom){
-      xml.querySelectorAll("entry").forEach(entry=>{
-        const title = entry.querySelector("title")?.textContent?.trim();
-        const link  = entry.querySelector("link")?.getAttribute("href");
-        const summary = clean(entry.querySelector("summary")?.textContent || entry.querySelector("content")?.textContent || "");
-        const pub = entry.querySelector("updated, published")?.textContent;
-        // imagem: <link rel="enclosure"> ou img na descrição
-        const enclosure = [...entry.querySelectorAll("link")].find(l => (l.getAttribute("rel")||"") === "enclosure");
-        const imgFromDesc = (summary.match(/https?:\/\/\S+\.(?:jpg|jpeg|png|gif)/i)||[])[0];
-        items.push({ title, link, desc: summary, pub: pub? new Date(pub) : null, enclosure: enclosure? {url: enclosure.getAttribute("href")} : null, imgFromDesc });
+      xml.querySelectorAll("entry").forEach(e=>{
+        items.push({title:e.querySelector("title")?.textContent?.trim(),
+          link:e.querySelector("link")?.getAttribute("href"),
+          desc:clean(e.querySelector("summary")?.textContent || e.querySelector("content")?.textContent),
+          pub:e.querySelector("updated, published")?.textContent? new Date(e.querySelector("updated, published").textContent):null});
       });
     } else {
       xml.querySelectorAll("item").forEach(it=>{
-        const title = it.querySelector("title")?.textContent?.trim();
-        const link  = it.querySelector("link")?.textContent?.trim();
-        const desc  = clean(it.querySelector("description")?.textContent || it.querySelector("content\\:encoded")?.textContent || "");
-        const pub   = it.querySelector("pubDate")?.textContent;
-        const media = it.querySelector("media\\:content, content")?.getAttribute?.("url");
-        const enclosure = it.querySelector("enclosure");
-        const imgFromDesc = (desc.match(/https?:\/\/\S+\.(?:jpg|jpeg|png|gif)/i)||[])[0];
-        items.push({
-          title, link, desc, pub: pub? new Date(pub) : null,
-          media: media? {url: media}: null,
-          enclosure: enclosure? {url: enclosure.getAttribute("url")} : null,
-          imgFromDesc
-        });
+        items.push({title:it.querySelector("title")?.textContent?.trim(),
+          link:it.querySelector("link")?.textContent?.trim(),
+          desc:clean(it.querySelector("description")?.textContent || it.querySelector("content\\:encoded")?.textContent),
+          pub:it.querySelector("pubDate")?.textContent? new Date(it.querySelector("pubDate").textContent):null});
       });
     }
-
-    // ordena por data desc, se houver
     items.sort((a,b)=>(b.pub?.getTime()||0)-(a.pub?.getTime()||0));
-    return items;
+    return items.slice(0,12);
   }
 
-  async function fetchFeed(url){
-    const key = `feed:${url}`;
-    const cached = cache.get(key);
-    if (cached) return cached;
+  const FEEDS_TECH = [
+    "https://techcrunch.com/feed/",
+    "https://www.theverge.com/rss/index.xml",
+    "https://feeds.arstechnica.com/arstechnica/index"
+  ];
+  const FEEDS_TELECOM = [
+    "https://www.theregister.com/networks/headlines.atom"
+  ];
+  const FEEDS_DC = [
+    "https://www.datacenterdynamics.com/en/rss/",
+    "https://www.datacenterknowledge.com/rss"
+  ];
 
-    const txt = await fetch(PROXY(url), { cache:"no-store" }).then(r=>r.text());
-    const items = parseFeed(txt).slice(0, 20); // guarda top 20
-    cache.set(key, items, CACHE_TTL);
-    return items;
-  }
-
-  // ====== Render ======
-  function renderSource(name, items){
-    byId("sourceBox").textContent = `Fonte: ${name}`;
-    if (!items || items.length === 0){
-      byId("heroTitle").textContent = "Sem itens disponíveis";
-      byId("heroDesc").textContent = "Não foi possível carregar notícias deste portal agora.";
-      byId("heroLink").href = "#";
-      byId("newsList").innerHTML = "";
-      return;
-    }
-
-    // Hero = primeiro item
-    const hero = items[0];
-    byId("heroTitle").textContent = hero.title || "Sem título";
-    byId("heroDesc").textContent  = (hero.desc || "").slice(0, 180);
-    byId("heroLink").href = hero.link || "#";
-
-    // Lista (até 8 itens)
-    const listHtml = items.slice(0, 8).map(it => {
-      const thumb = pickImg(it);
-      return `
-        <article class="item">
-          <img class="thumb" src="${thumb}" alt="">
-          <div>
-            <h4>${it.title || "Sem título"}</h4>
-            <p>${(it.desc || "").slice(0, 120)}</p>
-          </div>
-        </article>
-      `;
-    }).join("");
-    byId("newsList").innerHTML = listHtml;
-
-    // Ajusta velocidade do ticker ao tamanho do texto
-    const ticker = byId("ticker");
-    const w = ticker.scrollWidth || 2000;
-    ticker.style.animationDuration = `${Math.max(18, w/80)}s`;
-  }
-
-  // ====== Rotação de fontes ======
-  let idx = 0, timer = null, loaded = {};
-  async function showNext(){
-    const feed = FEEDS[idx % FEEDS.length];
-    idx++;
-
+  async function loadCategory(feeds, heroEl, listEl, srcEl, srcText){
+    srcEl.textContent = srcText;
     try{
-      if (!loaded[feed.name]) {
-        loaded[feed.name] = await fetchFeed(feed.url);
-      }
-      renderSource(feed.name, loaded[feed.name]);
-    }catch(e){
-      console.warn("Falha ao carregar feed:", feed.name, e);
-      renderSource(feed.name, []);
-    }
-
-    // agenda próxima rotação
-    clearTimeout(timer);
-    timer = setTimeout(showNext, ROTATE_MS);
+      const results = (await Promise.allSettled(feeds.map(fetchRSS)))
+        .filter(r=>r.status==="fulfilled").flatMap(r=>r.value);
+      if (!results.length){ heroEl.textContent="Sem itens agora"; listEl.innerHTML=""; return; }
+      const seen=new Set();
+      const uniq=results.filter(x=>{const k=x.link||x.title; if(!k||seen.has(k))return false; seen.add(k); return true;});
+      heroEl.textContent = uniq[0].title || "Destaque";
+      listEl.innerHTML = uniq.slice(0,8).map(x=>`
+        <article class="news-item">
+          <img src="${pickImg(x.title)}" alt="">
+          <div>
+            <h4><a href="${x.link||'#'}" target="_blank" rel="noopener" style="color:var(--text);text-decoration:none">${x.title||"Sem título"}</a></h4>
+            <p>${(x.desc||"").slice(0,120)}</p>
+          </div>
+        </article>`).join("");
+    }catch{ heroEl.textContent="Erro ao carregar"; listEl.innerHTML=""; }
   }
 
-  // ====== Inicialização ======
-  (async function init(){
-    // pré-carrega todos em paralelo (não bloqueante)
-    Promise.allSettled(FEEDS.map(f=>fetchFeed(f.url))).then(results=>{
-      results.forEach((r,i)=>{ if (r.status==="fulfilled") loaded[FEEDS[i].name] = r.value; });
-    });
-    // começa exibindo o primeiro
-    showNext();
-  })();
+  function initNews(){
+    loadCategory(FEEDS_TECH, document.getElementById("tech-hero"), document.getElementById("tech-list"), document.getElementById("tech-src"), "TechCrunch • The Verge • Ars");
+    loadCategory(FEEDS_TELECOM, document.getElementById("tel-hero"), document.getElementById("tel-list"), document.getElementById("tel-src"), "The Register — Networks");
+    loadCategory(FEEDS_DC, document.getElementById("dc-hero"), document.getElementById("dc-list"), document.getElementById("dc-src"), "DataCenterDynamics • Data Center Knowledge");
+  }
+
+  /* ========= TICKER velocidade dinâmica ========= */
+  function initTicker(){
+    const t = document.getElementById("ticker");
+    const upd = () => { const w = t.scrollWidth || 2000; t.style.animationDuration = `${Math.max(18, w/80)}s`; };
+    new ResizeObserver(()=>upd()).observe(t); upd();
+  }
+
+  /* ========= BOOT ========= */
+  document.addEventListener("DOMContentLoaded", ()=>{
+    startClock();
+    loadWeather(); setInterval(loadWeather, 5*60*1000);      // clima
+    updateFinance(); setInterval(updateFinance, 5*60*1000);  // finanças
+    initNews(); setInterval(initNews, 15*60*1000);           // notícias
+    initTicker();
+  });
 })();
 </script>
 </body>
