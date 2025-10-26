@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Digital Signage – Simulação</title>
+<style>
+  :root{--bg:#0b1b2b;--card:#0e2134;--muted:#7ea0c9;--text:#e8f0fa;--accent:#4cc0ff;--up:#36c16b;--down:#e35b5b}
+  *{box-sizing:border-box}html,body{height:100%}body{margin:0;font-family:Inter,Roboto,system-ui,-apple-system,sans-serif;color:var(--text);background:#0b1b2b}
+  .wrap{height:100vh;width:100vw;padding:24px;display:grid;gap:18px;grid-template-rows:80px 1fr 70px;grid-template-columns:1fr 420px;grid-template-areas:"top top" "main side" "footer footer"}
+  .top{grid-area:top;display:grid;grid-template-columns:260px 1fr 280px;gap:16px;align-items:center}
+  .brand{display:flex;gap:12px;align-items:center}.brand .name{font-weight:800;font-size:28px;letter-spacing:.06em}
+  .now{text-align:center}.now-time{font-size:34px;font-weight:700}.now-date{font-size:13px;color:var(--muted)}
+  .weather{justify-self:end;background:var(--card);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:10px 14px;display:flex;gap:12px;align-items:center;min-width:260px}
+  .w-icon{font-size:26px}.w-temp{font-size:22px;font-weight:700}.w-city{font-size:12px;color:var(--muted)}
+  .main{grid-area:main;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:24px;display:flex;flex-direction:column;gap:16px;overflow:hidden}
+  .headline{background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:18px;font-size:24px;font-weight:700}
+  .news-header{display:flex;align-items:center;justify-content:space-between}.news-header .title{font-size:12px;text-transform:uppercase;color:var(--muted);letter-spacing:.12em}
+  .news-list{display:grid;gap:12px;grid-auto-rows:minmax(0,1fr);overflow:auto}
+  .news-card{display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:center;background:var(--card);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:12px}
+  .news-card img{width:120px;height:72px;object-fit:cover;border-radius:10px}
+  .news-card h4{margin:0;font-size:16px}.news-card p{margin:4px 0 0;font-size:13px;color:var(--muted)}
+  .side{grid-area:side;display:grid;gap:16px}
+  .panel{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:16px}
+  .panel h3{margin:0 0 10px;font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
+  .stats{display:grid;gap:10px}
+  .stat{display:flex;justify-content:space-between;align-items:center;background:var(--card);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:10px 12px}
+  .stat .label{font-weight:600}.stat .val{font-weight:800;font-variant-numeric:tabular-nums}
+  .stat .delta{font-size:12px;opacity:.9}.delta.up{color:var(--up)}.delta.down{color:var(--down)}
+  .footer{grid-area:footer;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:14px;overflow:hidden;position:relative}
+  .marquee{position:absolute;white-space:nowrap;animation:slide 25s linear infinite;font-size:18px;padding:22px 0;color:#dbe8f8}@keyframes slide{from{transform:translateX(100%)}to{transform:translateX(-100%)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><div class="name">PSNE</div></div>
+    <div class="now"><div class="now-time" id="nowTime">--:--</div><div class="now-date" id="nowDate">---</div></div>
+    <div class="weather"><div class="w-icon" id="weatherIcon">⛅</div><div class="w-temp" id="weatherTemp">--°</div><div class="w-city" id="weatherCity">Localizando…</div></div>
+  </header>
+
+  <main class="main">
+    <div class="headline" id="headline">Inovação em Redes & IA: atualizações em tempo real</div>
+    <div class="news-header"><div class="title">Notícias de Tecnologia</div><div style="font-size:12px;color:var(--muted)" id="newsSrc">Fonte: SIMULAÇÃO</div></div>
+    <section class="news-list" id="newsList"></section>
+  </main>
+
+  <aside class="side">
+    <section class="panel">
+      <h3>Cotações • Atualiza 5 min</h3>
+      <div class="stats">
+        <div class="stat"><span class="label">USD / BRL</span><span class="val" id="usdbrl">--</span><span class="delta" id="usdbrlDelta">—</span></div>
+        <div class="stat"><span class="label">EUR / USD</span><span class="val" id="eurusd">--</span><span class="delta" id="eurusdDelta">—</span></div>
+        <div class="stat"><span class="label">BTC / USD</span><span class="val" id="btcusd">--</span><span class="delta" id="btcusdDelta">—</span></div>
+      </div>
+    </section>
+    <section class="panel">
+      <h3>Próximos Destaques</h3>
+      <ul style="margin:0;padding-left:18px;line-height:1.6;color:var(--muted)">
+        <li>SRv6 e redes Cloud-Scale</li>
+        <li>Observabilidade com IA (PSNE Observer)</li>
+        <li>Automação (GitOps / API-first)</li>
+        <li>FinOps para Telco Cloud</li>
+      </ul>
+    </section>
+  </aside>
+
+  <footer class="footer">
+    <div class="marquee" id="ticker">Transformando redes em inteligência • Zero-Touch Operations • SLA orientado a valor • Segurança by-design • Edge-to-Cloud • 5G & FWA • DataOps • Cultura de SRE • Atendimento 24x7 • PSNE — 100% Tech, 100% Cliente</div>
+  </footer>
+</div>
+
+<script>
+(() => {
+  // ====== DEMO SWITCH ======
+  const url = new URL(location.href);
+  const SIMULATION_MODE = url.searchParams.get("demo") === "1";
+
+  // ====== FORMATAÇÃO ======
+  const fmt2 = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmt4 = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+
+  const byId = id => document.getElementById(id);
+  const setDelta = (el, pct) => {
+    if (pct == null || Number.isNaN(pct)) { el.textContent = "—"; el.className = "delta"; return; }
+    const sign = pct > 0 ? "+" : "";
+    el.textContent = `${sign}${fmt2.format(pct)}%`;
+    el.className = "delta " + (pct > 0 ? "up" : pct < 0 ? "down" : "");
+  };
+
+  // ====== RELÓGIO ======
+  function startClock(){
+    const t = byId("nowTime"), d = byId("nowDate");
+    function tick(){
+      const now = new Date();
+      t.textContent = now.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+      d.textContent = now.toLocaleDateString('pt-BR', {weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+    }
+    tick(); setInterval(tick, 1000);
+  }
+
+  // ====== CLIMA (simulado) ======
+  function loadWeather(){
+    if (SIMULATION_MODE){
+      byId("weatherIcon").textContent = "☀️";
+      byId("weatherTemp").textContent = "28°";
+      byId("weatherCity").textContent = "Miami, FL";
+      return;
+    }
+    // (opcional) implementar chamada real aqui; se falhar, simula:
+    byId("weatherIcon").textContent = "⛅";
+    byId("weatherTemp").textContent = "26°";
+    byId("weatherCity").textContent = "São Paulo, BR";
+  }
+
+  // ====== COTAÇÕES ======
+  // Funções simuladas retornam valores que "respiram" levemente para parecerem em tempo real.
+  function jitter(base, pct=0.3){ // pct = amplitude %
+    const f = (Math.random()*2-1)*(pct/100);
+    return base*(1+f);
+  }
+  async function fxSimulate(){
+    // USD/BRL ~ 5.50; EUR/USD ~ 1.08; BTC/USD ~ 68k
+    const usdbrl = jitter(5.50, 0.4);
+    const eurusd = jitter(1.08, 0.2);
+    const btcusd = jitter(68000, 0.8);
+    // deltas fictícias diárias
+    const d1 = (Math.random()*0.6 - 0.3);  // -0.30% a +0.30%
+    const d2 = (Math.random()*0.4 - 0.2);
+    const d3 = (Math.random()*1.4 - 0.7);
+    return {
+      usdbrl: { value: usdbrl, delta: d1 },
+      eurusd: { value: eurusd, delta: d2 },
+      btcusd: { value: btcusd, delta: d3 }
+    };
+  }
+
+  async function updateFXPanels(){
+    try{
+      const fx = await fxSimulate();
+      byId("usdbrl").textContent = fmt4.format(fx.usdbrl.value); setDelta(byId("usdbrlDelta"), fx.usdbrl.delta);
+      byId("eurusd").textContent = fmt4.format(fx.eurusd.value); setDelta(byId("eurusdDelta"), fx.eurusd.delta);
+      byId("btcusd").textContent = fmt2.format(fx.btcusd.value); setDelta(byId("btcusdDelta"), fx.btcusd.delta);
+    }catch(e){
+      byId("usdbrl").textContent = "--"; byId("usdbrlDelta").textContent = "—";
+      byId("eurusd").textContent = "--"; byId("eurusdDelta").textContent = "—";
+      byId("btcusd").textContent = "--"; byId("btcusdDelta").textContent = "—";
+    }
+  }
+
+  // ====== NOTÍCIAS (simuladas) ======
+  const DEMO_NEWS = [
+    {title:"Arista leva automação de rede a novo patamar com APIs unificadas", desc:"Integrações simplificadas reduzem tempo de provisionamento em 40% e aumentam a confiabilidade.", img:"https://picsum.photos/seed/arista/240/144"},
+    {title:"SRv6 ganha espaço em backbones regionais", desc:"Operadoras relatam ganhos de engenharia de tráfego e simplificação operacional.", img:"https://picsum.photos/seed/srv6/240/144"},
+    {title:"Observabilidade guiada por IA acelera MTTR", desc:"Correlação de eventos e runbooks inteligentes reduzem ruído e priorizam incidentes críticos.", img:"https://picsum.photos/seed/aiops/240/144"},
+    {title:"FinOps para Telco Cloud: onde economizar sem perder performance", desc:"Análise de custo por serviço e automações de desligamento fora de pico.", img:"https://picsum.photos/seed/finops/240/144"},
+    {title:"Nova geração Wi-Fi para ambientes de alta densidade", desc:"Canais mais largos, OFDMA e BSS Coloring melhoram throughput em arenas e campi.", img:"https://picsum.photos/seed/wifi/240/144"},
+    {title:"Zero-Touch Operations: do laboratório à produção", desc:"Padrões imutáveis, GitOps e validação automática em pipelines.", img:"https://picsum.photos/seed/gitops/240/144"}
+  ];
+  function renderNewsSim(){
+    const list = byId("newsList");
+    list.innerHTML = DEMO_NEWS.map(n => `
+      <article class="news-card">
+        <img src="${n.img}" alt="thumb">
+        <div><h4>${n.title}</h4><p>${n.desc}</p></div>
+      </article>`).join("");
+    byId("headline").textContent = DEMO_NEWS[0].title;
+    byId("newsSrc").textContent = "Fonte: SIMULAÇÃO";
+  }
+
+  // ====== INIT ======
+  function init(){
+    startClock();
+    loadWeather();
+    renderNewsSim();
+    updateFXPanels();
+    setInterval(updateFXPanels, 5*60*1000); // respira a cada 5 min
+    // ticker: ajuste de velocidade conforme texto
+    const ticker = byId("ticker");
+    const updateAnim = () => { const w = ticker.scrollWidth || 2000; ticker.style.animationDuration = `${Math.max(18, w/80)}s`; };
+    new ResizeObserver(()=>updateAnim()).observe(ticker); updateAnim();
+  }
+  document.addEventListener("DOMContentLoaded", init);
+})();
+</script>
+</body>
+</html>
