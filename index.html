@@ -10,18 +10,16 @@
 <link rel="preconnect" href="https://query1.finance.yahoo.com">
 <link rel="preconnect" href="https://api.exchangerate.host">
 <style>
-  /* Escala pensada para TV 40" 1080p: use vw para crescer proporcionalmente ao tamanho da tela */
   :root{
     --bg:#0b1b2b; --panel:#0e2134; --muted:#8fb2df; --text:#eaf2ff; --accent:#4cc0ff;
-    --ok:#2ecc71; --bad:#ff5b6e; --ring:rgba(255,255,255,.1);
+    --ok:#2ecc71; --bad:#ff5b6e; --ring:rgba(255,255,255,.10);
     --fs-xxl: clamp(28px, 2.2vw, 44px);
     --fs-xl:  clamp(22px, 1.8vw, 36px);
     --fs-lg:  clamp(18px, 1.4vw, 28px);
     --fs-md:  clamp(15px, 1.1vw, 22px);
     --fs-sm:  clamp(13px, 0.9vw, 18px);
   }
-  *{box-sizing:border-box}
-  html,body{height:100%}
+  *{box-sizing:border-box} html,body{height:100%}
   body{
     margin:0; color:var(--text);
     font-family: Inter, Roboto, "Segoe UI", system-ui, -apple-system, sans-serif;
@@ -29,76 +27,60 @@
   }
   .wrap{
     width:100vw; height:100vh; padding:18px; display:grid; gap:18px;
-    grid-template-rows: 120px 1fr; /* header + grid */
+    grid-template-rows: 120px 1fr; /* header + conteúdo */
   }
-  /* ====== HEADER: LOGO (sem texto ao lado) + DATA/HORA/CLIMA/VENTO/CHUVA ====== */
-  header{
-    display:grid; grid-template-columns: 120px 1fr; gap:18px;
-  }
+
+  /* ===== HEADER (mantido) ===== */
+  header{ display:grid; grid-template-columns: 120px 1fr; gap:18px }
   .logo-box{
     display:flex; align-items:center; justify-content:center;
     background:rgba(255,255,255,.04); border:1px solid var(--ring); border-radius:14px;
   }
   .logo-box img{ width:88px; height:88px; object-fit:contain }
-
-  .meta{
-    display:grid; grid-template-columns: 1.2fr 1fr 1fr; gap:14px;
-  }
+  .meta{ display:grid; grid-template-columns: 1.2fr 1fr 1fr; gap:14px }
   .meta-card{
     background:rgba(255,255,255,.04); border:1px solid var(--ring); border-radius:14px; padding:14px 18px;
     display:flex; align-items:center; gap:18px;
   }
   .time-wrap .time{ font-size: var(--fs-xxl); font-weight:800; letter-spacing:.04em }
   .time-wrap .date{ font-size: var(--fs-sm); color:var(--muted) }
-
   .weather-wrap{ display:flex; align-items:center; gap:14px }
-  .w-ico{ font-size: var(--fs-xl) }
-  .w-temp{ font-size: var(--fs-xl); font-weight:800 }
-  .w-city{ font-size: var(--fs-sm); color:var(--muted) }
-
+  .w-ico{ font-size: var(--fs-xl) } .w-temp{ font-size: var(--fs-xl); font-weight:800 } .w-city{ font-size: var(--fs-sm); color:var(--muted) }
   .forecast-grid{ display:grid; grid-auto-flow:column; gap:16px; width:100% }
-  .f-item{ display:grid; gap:6px }
-  .f-label{ font-size: var(--fs-sm); color:var(--muted); letter-spacing:.08em; text-transform:uppercase }
-  .f-value{ font-size: var(--fs-lg); font-weight:700 }
+  .f-item{ display:grid; gap:6px } .f-label{ font-size: var(--fs-sm); color:var(--muted); letter-spacing:.08em; text-transform:uppercase } .f-value{ font-size: var(--fs-lg); font-weight:700 }
 
-  /* ====== GRID DE CONTEÚDO ====== */
-  .grid{
+  /* ===== CONTEÚDO 2 COLUNAS ===== */
+  .content{
     display:grid; gap:18px;
-    grid-template-columns: 1.2fr 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
-    grid-template-areas:
-      "fin tech tech"
-      "fin psne tech";
+    grid-template-columns: 2fr 1.2fr; /* Notícias maior à esquerda */
+    grid-auto-rows: 1fr;
   }
   .panel{
-    background:rgba(255,255,255,.04); border:1px solid var(--ring); border-radius:16px; padding:16px; display:flex; flex-direction:column; gap:12px; min-height:0;
+    background:rgba(255,255,255,.04); border:1px solid var(--ring); border-radius:16px; padding:16px;
+    display:flex; flex-direction:column; gap:12px; min-height:0;
   }
   .panel h3{ margin:0; font-size: var(--fs-sm); letter-spacing:.14em; text-transform:uppercase; color:var(--muted) }
-  .panel .sub{ font-size: var(--fs-sm); color: var(--muted) }
+  .sub{ font-size: var(--fs-sm); color: var(--muted) }
 
-  /* Financeiros */
-  #fin{ grid-area: fin; }
-  .quotes{ display:grid; gap:14px; grid-template-columns: repeat(2, 1fr); grid-auto-rows:1fr }
-  .q-card{ background:var(--panel); border:1px solid var(--ring); border-radius:12px; padding:14px; display:grid; gap:8px }
-  .q-head{ display:flex; justify-content:space-between; align-items:center }
-  .q-name{ font-size: var(--fs-md); font-weight:700 }
-  .q-src{ font-size: var(--fs-sm); color:var(--muted) }
-  .q-val{ font-size: var(--fs-xl); font-weight:800 }
-  .q-delta{ font-size: var(--fs-sm) } .up{ color: var(--ok) } .down{ color: var(--bad) }
-
-  /* Tech Market */
-  #tech{ grid-area: tech; }
-  .hero{ font-size: var(--fs-lg); font-weight:800; line-height:1.3; }
+  /* Notícias */
+  #news .hero{ font-size: var(--fs-lg); font-weight:800; line-height:1.28; }
   .news-list{ display:grid; gap:10px; grid-auto-rows:minmax(0,1fr); overflow:auto; padding-right:6px }
-  .item{ display:grid; grid-template-columns: 140px 1fr; gap:12px; align-items:center; background:var(--panel); border:1px solid var(--ring); border-radius:12px; padding:10px }
-  .thumb{ width:140px; height:84px; object-fit:cover; border-radius:8px; background:#16324a }
+  .item{ display:grid; grid-template-columns: 160px 1fr; gap:12px; align-items:center; background:var(--panel); border:1px solid var(--ring); border-radius:12px; padding:10px }
+  .thumb{ width:160px; height:96px; object-fit:cover; border-radius:8px; background:#16324a }
   .item h4{ margin:0; font-size: var(--fs-md) }
-  .item p{ margin:4px 0 0; font-size: var.--fs-sm; color:var(--muted) }
+  .item p{ margin:4px 0 0; font-size: var(--fs-sm); color:var(--muted) }
+  .src-badge{ font-size: var(--fs-sm); color:var(--muted) }
 
-  /* PSNE Novidades */
-  #psne{ grid-area: psne; }
-  .psne-list{ display:grid; gap:10px; grid-auto-rows:minmax(0,1fr); overflow:auto; padding-right:6px }
-  .pill{ background:var(--panel); border:1px solid var(--ring); border-radius:12px; padding:12px; font-size: var(--fs-md) }
+  /* Produtos & Serviços PSNE */
+  .cards{ display:grid; gap:12px; grid-auto-rows:minmax(0,1fr); overflow:auto; padding-right:6px }
+  .card{
+    background:var(--panel); border:1px solid var(--ring); border-radius:12px; padding:12px;
+    display:grid; grid-template-columns: 44px 1fr; gap:12px; align-items:flex-start;
+  }
+  .ico{ font-size: 28px; line-height:1; display:flex; align-items:center; justify-content:center }
+  .card h4{ margin:0 0 6px; font-size: var(--fs-md) }
+  .card ul{ margin:0; padding-left:18px; font-size: var(--fs-sm); color:var(--muted); line-height:1.55 }
+  .pill{ display:inline-block; padding:.25em .6em; border:1px solid var(--ring); border-radius:999px; margin-right:6px; font-size: var(--fs-sm); color:var(--muted) }
 
   /* Scrollbar sutil */
   ::-webkit-scrollbar{height:10px;width:10px} ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:8px}
@@ -106,28 +88,25 @@
 </head>
 <body>
 <div class="wrap">
-  <!-- ===== HEADER ===== -->
+
+  <!-- ===== CABEÇALHO (mantido) ===== -->
   <header>
     <div class="logo-box">
-      <!-- LOGO sem texto “PSNE” ao lado -->
       <img src="./logo-branco-transparente-quadrado.png" alt="Logo">
     </div>
 
     <div class="meta">
-      <!-- Data/Hora -->
       <div class="meta-card time-wrap">
         <div class="time" id="nowTime">--:--</div>
         <div class="date" id="nowDate">---</div>
       </div>
 
-      <!-- Clima atual -->
       <div class="meta-card weather-wrap" title="Atualiza ~5 min">
         <div class="w-ico" id="wIcon">⛅</div>
         <div class="w-temp" id="wTemp">--°</div>
         <div class="w-city" id="wCity">Localizando…</div>
       </div>
 
-      <!-- Previsões rápidas: Vento & Chuva -->
       <div class="meta-card">
         <div class="forecast-grid" style="width:100%">
           <div class="f-item">
@@ -143,56 +122,37 @@
     </div>
   </header>
 
-  <!-- ===== GRID ===== -->
-  <section class="grid">
-    <!-- (1) Financeiros -->
-    <section class="panel" id="fin">
-      <h3>Financeiros</h3>
-      <div class="sub">Arista Networks (ANET) • SONDA.SN • BRL → USD • BTC → USD</div>
-      <div class="quotes">
-        <div class="q-card">
-          <div class="q-head"><span class="q-name">ANET (NYSE)</span><span class="q-src" id="src-anet">Yahoo Finance</span></div>
-          <div class="q-val" id="anet-val">--</div>
-          <div class="q-delta" id="anet-delta">—</div>
-        </div>
-        <div class="q-card">
-          <div class="q-head"><span class="q-name">SONDA.SN (Santiago)</span><span class="q-src" id="src-sonda">Yahoo Finance</span></div>
-          <div class="q-val" id="sonda-val">--</div>
-          <div class="q-delta" id="sonda-delta">—</div>
-        </div>
-        <div class="q-card">
-          <div class="q-head"><span class="q-name">BRL → USD</span><span class="q-src" id="src-brlusd">exchangerate.host</span></div>
-          <div class="q-val" id="brlusd-val">--</div>
-          <div class="q-delta" id="brlusd-delta">—</div>
-        </div>
-        <div class="q-card">
-          <div class="q-head"><span class="q-name">BTC / USD</span><span class="q-src" id="src-btcusd">CoinGecko</span></div>
-          <div class="q-val" id="btcusd-val">--</div>
-          <div class="q-delta" id="btcusd-delta">—</div>
-        </div>
-      </div>
+  <!-- ===== PARTE INFERIOR: 2 COLUNAS ===== -->
+  <section class="content">
+
+    <!-- Notícias -->
+    <section class="panel" id="news">
+      <h3>Notícias</h3>
+      <div class="sub src-badge" id="news-src">TechCrunch • The Verge • Ars • The Register • DCD</div>
+      <div class="hero" id="news-hero">Carregando…</div>
+      <div class="news-list" id="news-list"></div>
     </section>
 
-    <!-- (2) Mercado de Tecnologia (RSS) -->
-    <section class="panel" id="tech">
-      <h3>Informações do Mercado de Tecnologia</h3>
-      <div class="sub" id="tech-src">TechCrunch • The Verge • Ars Technica (rotativo)</div>
-      <div class="hero" id="tech-hero">Carregando…</div>
-      <div class="news-list" id="tech-list"></div>
-    </section>
-
-    <!-- (3) Novidades da PSNE (edite o array PSNE_UPDATES abaixo) -->
+    <!-- Produtos & Serviços da PSNE -->
     <section class="panel" id="psne">
-      <h3>Novidades</h3>
-      <div class="sub">Atualizações e destaques recentes</div>
-      <div class="psne-list" id="psne-list"></div>
+      <h3>Produtos & Serviços</h3>
+      <div class="sub">
+        <span class="pill">Consultoria</span>
+        <span class="pill">Implantação</span>
+        <span class="pill">Venda de soluções</span>
+        <span class="pill">Suporte & Manutenção</span>
+        <span class="pill">NOC 24×7</span>
+        <span class="pill">Serviços de Campo</span>
+      </div>
+      <div class="cards" id="psne-cards"><!-- preenchido via JS --></div>
     </section>
+
   </section>
 </div>
 
 <script>
 (() => {
-  /* ========== RELÓGIO ========== */
+  /* ===== Relógio ===== */
   function startClock(){
     const t = document.getElementById('nowTime');
     const d = document.getElementById('nowDate');
@@ -205,7 +165,7 @@
     tick(); setInterval(tick, 1000);
   }
 
-  /* ========== CLIMA + VENTO + CHUVA (Open-Meteo) ========== */
+  /* ===== Clima / Vento / Chuva (Open-Meteo) ===== */
   function iconFromCode(code,isDay){
     const sun="☀️",moon="🌙",cloud="⛅",over="☁️",rain="🌧️",tstorm="⛈️",snow="❄️",fog="🌫️";
     const day=isDay?sun:moon;
@@ -254,91 +214,32 @@
       wT.textContent=`${Math.round(cw.temperature)}°`;
       wC.textContent=loc.name;
 
-      // janela próximas 6h
-      const now = new Date(j.hourly.time[0]);
-      const idxStart = 0; // open-meteo já começa em hora atual/alinhada
-      const idxEnd = Math.min(j.hourly.time.length-1, idxStart+5);
-      const windSlice = j.hourly.windspeed_10m.slice(idxStart, idxEnd+1).filter(v=>typeof v==='number');
-      const rainSlice = (j.hourly.precipitation_probability||[]).slice(idxStart, idxEnd+1).filter(v=>typeof v==='number');
-
+      // próximas 6h
+      const windSlice = j.hourly.windspeed_10m.slice(0,6).filter(v=>typeof v==='number');
+      const rainSlice = (j.hourly.precipitation_probability||[]).slice(0,6).filter(v=>typeof v==='number');
       const windAvg = windSlice.length ? (windSlice.reduce((a,b)=>a+b,0)/windSlice.length) : null;
       const rainMax = rainSlice.length ? Math.max(...rainSlice) : null;
-
       windEl.textContent = windAvg!=null ? `${Math.round(windAvg)} km/h` : "—";
       rainEl.textContent = rainMax!=null ? `${Math.round(rainMax)}%` : "—";
-    }catch(e){
+    }catch{
       wI.textContent="⛅"; wT.textContent="—"; wC.textContent="Indisp.";
       windEl.textContent="—"; rainEl.textContent="—";
     }
   }
 
-  /* ========== FINANCEIROS (BRL→USD, BTC/USD, ANET, SONDA.SN) ========== */
-  const fmt2 = new Intl.NumberFormat('pt-BR',{minimumFractionDigits:2, maximumFractionDigits:2});
-  const fmt4 = new Intl.NumberFormat('pt-BR',{minimumFractionDigits:4, maximumFractionDigits:4});
-  function setDelta(el,pct){
-    if(pct==null||Number.isNaN(pct)){ el.textContent="—"; el.className="q-delta"; return; }
-    const s=pct>0?"+":""; el.textContent=`${s}${fmt2.format(pct)}%`;
-    el.className="q-delta " + (pct>0?"up":pct<0?"down":"");
-  }
-  async function brlUsd(){
-    const today=await fetch("https://api.exchangerate.host/latest?base=BRL&symbols=USD").then(r=>r.json());
-    const curr=today?.rates?.USD;
-    const d=new Date(); d.setDate(d.getDate()-1);
-    const y=d.toISOString().slice(0,10);
-    const prevJ=await fetch(`https://api.exchangerate.host/${y}?base=BRL&symbols=USD`).then(r=>r.json());
-    const prev=prevJ?.rates?.USD;
-    return { value: curr, delta: prev?((curr-prev)/prev*100):null };
-  }
-  async function btcUsd(){
-    const now=await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd",{cache:"no-store"}).then(r=>r.json());
-    const price=now?.bitcoin?.usd;
-    const hist=await fetch("https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=1").then(r=>r.json());
-    const series=hist?.prices||[]; const first=series.length?series[0][1]:null;
-    return { value: price, delta: (first&&price)?((price-first)/first*100):null };
-  }
-  async function yahooTicker(ticker){
-    const j=await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?range=1d&interval=1m`).then(r=>r.json());
-    const r=j.chart?.result?.[0];
-    const last=r?.meta?.regularMarketPrice ?? (r?.indicators?.quote?.[0]?.close?.slice(-1)[0]);
-    const open=r?.meta?.chartPreviousClose ?? (r?.indicators?.quote?.[0]?.close?.[0]);
-    return { value:last, delta:(open&&last)?((last-open)/open*100):null };
-  }
-  async function updateFinance(){
-    try{
-      const [anet, sonda, fx, btc] = await Promise.all([
-        yahooTicker("ANET"),
-        yahooTicker("SONDA.SN"),
-        brlUsd(),
-        btcUsd()
-      ]);
-      // ANET
-      document.getElementById('anet-val').textContent = anet?.value? `$ ${fmt2.format(anet.value)}` : "--";
-      setDelta(document.getElementById('anet-delta'), anet?.delta);
-      // SONDA
-      document.getElementById('sonda-val').textContent = sonda?.value? `$ ${fmt2.format(sonda.value)}` : "--";
-      setDelta(document.getElementById('sonda-delta'), sonda?.delta);
-      // BRL → USD
-      document.getElementById('brlusd-val').textContent = fx?.value? `$ ${fmt4.format(fx.value)}` : "--";
-      setDelta(document.getElementById('brlusd-delta'), fx?.delta);
-      // BTC/USD
-      document.getElementById('btcusd-val').textContent = btc?.value? `$ ${fmt2.format(btc.value)}` : "--";
-      setDelta(document.getElementById('btcusd-delta'), btc?.delta);
-    }catch(e){
-      // em falha, mantém placeholders
-    }
-  }
-
-  /* ========== NEWS (Tech Market) ==========
-     Rotação entre 3 feeds; lista com até 8 itens; atualiza a cada 15 min */
+  /* ===== Notícias (RSS via proxy) ===== */
   const PROXY = (u)=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`;
   const FEEDS = [
     {name:"TechCrunch", url:"https://techcrunch.com/feed/"},
     {name:"The Verge", url:"https://www.theverge.com/rss/index.xml"},
-    {name:"Ars Technica", url:"https://feeds.arstechnica.com/arstechnica/index"}
+    {name:"Ars Technica", url:"https://feeds.arstechnica.com/arstechnica/index"},
+    {name:"The Register (Networks)", url:"https://www.theregister.com/networks/headlines.atom"},
+    {name:"DataCenterDynamics", url:"https://www.datacenterdynamics.com/en/rss/"}
   ];
   let feedIdx=0, feedTimer=null;
   const clean = s=>(s||"").replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim();
-  function thumb(title){ return `https://picsum.photos/seed/${encodeURIComponent((title||'img').slice(0,24))}/280/168`; }
+  const thumb = t=>`https://picsum.photos/seed/${encodeURIComponent((t||'img').slice(0,24))}/320/192`;
+
   async function fetchRSS(url){
     const txt=await fetch(PROXY(url),{cache:"no-store"}).then(r=>r.text());
     const xml=new DOMParser().parseFromString(txt,"text/xml");
@@ -362,50 +263,103 @@
     items.sort((a,b)=>(b.pub?.getTime()||0)-(a.pub?.getTime()||0));
     return items.slice(0,12);
   }
-  async function rotateTech(){
+
+  async function rotateNews(){
     const feed=FEEDS[feedIdx % FEEDS.length]; feedIdx++;
-    document.getElementById('tech-src').textContent = `${feed.name}`;
+    document.getElementById('news-src').textContent = feed.name;
     try{
       const items=await fetchRSS(feed.url);
-      if(!items.length){ document.getElementById('tech-hero').textContent="Sem itens"; document.getElementById('tech-list').innerHTML=""; }
+      const hero=document.getElementById('news-hero');
+      const list=document.getElementById('news-list');
+      if(!items.length){ hero.textContent="Sem itens"; list.innerHTML=""; }
       else{
-        document.getElementById('tech-hero').textContent = items[0].title || "Destaque";
-        document.getElementById('tech-list').innerHTML = items.slice(0,8).map(x=>`
+        hero.textContent = items[0].title || "Destaque";
+        list.innerHTML = items.slice(0,8).map(x=>`
           <article class="item">
             <img class="thumb" src="${thumb(x.title)}" alt="">
             <div>
               <h4><a href="${x.link||'#'}" target="_blank" rel="noopener" style="color:var(--text);text-decoration:none">${x.title||'Sem título'}</a></h4>
-              <p>${(x.desc||'').slice(0,140)}</p>
+              <p>${(x.desc||'').slice(0,160)}</p>
             </div>
           </article>`).join("");
       }
-    }catch(e){
-      document.getElementById('tech-hero').textContent="Erro ao carregar";
-      document.getElementById('tech-list').innerHTML="";
+    }catch{
+      document.getElementById('news-hero').textContent="Erro ao carregar";
+      document.getElementById('news-list').innerHTML="";
     }
     clearTimeout(feedTimer);
-    feedTimer=setTimeout(rotateTech, 20000); // troca portal a cada 20s
+    feedTimer=setTimeout(rotateNews, 20000); // troca portal a cada 20s
   }
 
-  /* ========== Novidades PSNE (estático/editável) ========== */
-  const PSNE_UPDATES = [
-    "Lançamento do módulo **AIOps** no PSNE Observer com correlação de eventos em tempo real.",
-    "Nova oferta **SRv6 Design & Readiness** para backbones e redes regionais.",
-    "Parceria com fabricantes líderes para **EVPN/VXLAN** em data centers de alta densidade.",
-    "Programa **FinOps para Telco Cloud** com otimização de 20–30% em custos de nuvem.",
-    "Treinamentos hands-on: **GitOps para redes** e **Automação API-first**."
+  /* ===== Produtos & Serviços da PSNE =====
+     Edite livremente este catálogo. Os textos são curtos para leitura à distância. */
+  const PSNE_PRODUCTS = [
+    {
+      icon:"🧭", title:"Consultoria & Engenharia",
+      items:[
+        "Assessments orientados a risco & investimento (matriz GUT)",
+        "Arquiteturas IP/MPLS, BNG/CGNAT, SRv6, Telco Cloud",
+        "HLD/LLD, blueprint multi-vendor e roteiros de migração"
+      ]
+    },
+    {
+      icon:"⚙️", title:"Implantação & Automação",
+      items:[
+        "EVPN/VXLAN em data centers cloud-scale",
+        "Automação GitOps / API-first, CI/CD de rede",
+        "Runbooks e validações pré/pós-mudança (ZM/GMUD)"
+      ]
+    },
+    {
+      icon:"🧩", title:"Venda de Soluções",
+      items:[
+        "Switching/Routing, DWDM, Firewalls, Wi-Fi 6/6E",
+        "Ópticos, transceivers e cabos validados",
+        "Licenças e subscrições (multi-fabricantes)"
+      ]
+    },
+    {
+      icon:"🛡️", title:"Suporte & Manutenção",
+      items:[
+        "Sustentação de ambiente, PSIRT, hardening",
+        "Gestão de chamados com fabricantes",
+        "Relatórios mensais com KPIs e recomendações"
+      ]
+    },
+    {
+      icon:"🛰️", title:"NOC 24×7 & Observabilidade",
+      items:[
+        "PSNE Observer (AIOps/FinOps) & dashboards executivos",
+        "Correlação de eventos, redução de ruído e MTTR",
+        "SLA orientado a valor, SRE e SLOs por serviço"
+      ]
+    },
+    {
+      icon:"🛠️", title:"Serviços de Campo (Fibra & DWDM)",
+      items:[
+        "Ativações, troubleshooting, medições e OTDR",
+        "Janelas noturnas, mobilização regional e nacional",
+        "Documentação ‘as-built’ e atualização de CMDB"
+      ]
+    }
   ];
   function renderPSNE(){
-    const list=document.getElementById('psne-list');
-    list.innerHTML = PSNE_UPDATES.map(t=>`<div class="pill">${t}</div>`).join("");
+    const wrap=document.getElementById('psne-cards');
+    wrap.innerHTML = PSNE_PRODUCTS.map(c=>`
+      <div class="card">
+        <div class="ico">${c.icon}</div>
+        <div>
+          <h4>${c.title}</h4>
+          <ul>${c.items.map(i=>`<li>${i}</li>`).join("")}</ul>
+        </div>
+      </div>`).join("");
   }
 
-  /* ========== BOOTSTRAP ========== */
+  /* ===== Boot ===== */
   document.addEventListener('DOMContentLoaded', ()=>{
     startClock();
     loadWeather(); setInterval(loadWeather, 5*60*1000);
-    updateFinance(); setInterval(updateFinance, 5*60*1000);
-    rotateTech(); setInterval(async()=>{ /* refresh conteúdo de onde estiver rodando */ }, 15*60*1000);
+    rotateNews(); setInterval(()=>{/* refresh silencioso */}, 15*60*1000);
     renderPSNE();
   });
 })();
