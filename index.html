@@ -3,104 +3,66 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PSNE | Digital Signage 16:9</title>
+  <title>PSNE | Digital Signage 42" (16:9)</title>
   <style>
+    /*
+      Layout otimizado para TV 42" Full HD (1920x1080) no modo 16:9.
+      Usa um canvas com aspect-ratio 16/9 que escala para preencher a tela.
+    */
     :root{
-      --bg:#0e4a5c;      /* fundo dos cards */
-      --fg:#d6eef6;      /* textos */
       --page:#062f3a;    /* fundo geral */
-      --border: #84a9b8; /* borda suave */
+      --bg:#0e4a5c;      /* fundo dos cards */
+      --fg:#e6f6fb;      /* textos */
+      --muted:#b8d5df;   /* textos secundários */
+      --border:#86adbc;  /* borda suave */
       --gap: 18px;       /* espaçamento entre cards */
       --radius: 28px;    /* cantos arredondados */
-      --shadow: 0 0 0 4px rgba(132,169,184,.18) inset, 0 14px 30px rgba(0,0,0,.25);
-      --accent:#bde0ea;
+      --shadow: 0 0 0 4px rgba(134,173,188,.18) inset, 0 14px 30px rgba(0,0,0,.25);
     }
 
-    html,body{
-      height:100%;
-      margin:0;
-      background:var(--page);
-      color:var(--fg);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, 'Helvetica Neue', Arial, "Noto Sans", sans-serif;
-      overflow:hidden; /* TV full screen */
-    }
+    html,body{ height:100%; margin:0; background:var(--page); color:var(--fg); font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif; overflow:hidden; }
 
-    /* Wrapper 16:9 seguro que escala ocupando a tela inteira */
-    .frame{
-      position:fixed; inset:0; display:grid; place-items:center;
-    }
+    .frame{ position:fixed; inset:0; display:grid; place-items:center; }
     .canvas{
-      width:100vw; height:56.25vw; /* 16:9 = 9/16 = .5625 */
-      max-height:100vh; max-width:177.78vh; /* mantém 16:9 preenchendo a tela */
-      aspect-ratio:16/9;
-      display:grid;
+      width:100vw; height:56.25vw; /* 16:9 */
+      max-height:100vh; max-width:177.78vh;
+      aspect-ratio:16/9; box-sizing:border-box; padding:var(--gap);
+      display:grid; gap:var(--gap);
       grid-template-columns: 40% 60%;
-      grid-template-rows: auto 1fr 1.2fr; /* topo, manchete/img, bloco PSNE ocupa 2 linhas no lado direito */
-      gap: var(--gap);
-      padding: var(--gap);
-      box-sizing: border-box;
+      grid-template-rows: auto 1fr 1.2fr; /* topo, notícias, PSNE */
     }
 
-    /* Faixa Superior (dentro da coluna esquerda e direita, mas em toda a largura) */
-    .topbar{
-      grid-column: 1 / 3;
-      display:grid;
-      grid-template-columns: 15% 22% 12% 12% 16% 11% 12%;
-      gap: var(--gap);
-    }
+    /* TOP BAR - 7 cards como no layout original */
+    .topbar{ grid-column:1/3; display:grid; grid-template-columns: 15% 22% 12% 12% 16% 11% 12%; gap:var(--gap); }
 
-    .card{
-      background: var(--bg);
-      border: 2px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 18px 22px;
-      display:flex; flex-direction:column; justify-content:center; align-items:center;
-      text-align:center;
-    }
-    .card .label{ font-size: 1.45vw; font-weight: 700; letter-spacing:.4px; opacity:.85; }
-    .card .value{ font-size: 1.9vw; font-weight: 700; margin-top: .35em; }
+    .card{ background:var(--bg); border:2px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px 22px; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; }
+    .label{ font-size:1.35vw; font-weight:700; letter-spacing:.3px; opacity:.9; }
+    .value{ font-size:1.85vw; font-weight:800; margin-top:.35em; }
 
-    /* Coluna Esquerda */
-    .left{
-      grid-column:1; display:grid; grid-template-rows: auto 1fr; gap: var(--gap);
-    }
+    /* COLUNA ESQUERDA – Notícias (3 manchetes simultâneas) */
+    .left{ grid-column:1; grid-row:2/4; display:grid; grid-template-rows: 1fr 1.2fr; gap:var(--gap); }
+    .news{ display:grid; grid-template-rows:auto 1fr; gap:12px; }
+    .news h2{ margin:0 6px; font-size:1.6vw; font-weight:800; opacity:.95; }
+    .news-grid{ display:grid; gap:var(--gap); grid-template-columns: 1fr; grid-auto-rows: 1fr; }
+    .headline{ display:flex; align-items:center; justify-content:center; padding:22px; font-size:1.45vw; font-weight:800; text-align:center; border-radius:calc(var(--radius) - 6px); background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.18); }
 
-    .headline{ display:flex; align-items:center; justify-content:center; font-size:2.2vw; font-weight:800; padding: 28px; }
+    /* Área visual para imagem ou banner abaixo das manchetes */
+    .visual{ display:flex; align-items:center; justify-content:center; font-size:1.2vw; }
+    .visual img{ width:100%; height:100%; object-fit:cover; border-radius:calc(var(--radius) - 6px); }
 
-    .headline-img{ display:flex; align-items:center; justify-content:center; font-size:1.6vw; }
-    .headline-img img{ width:100%; height:100%; object-fit:cover; border-radius: calc(var(--radius) - 6px); filter: contrast(1.02) saturate(1.05); }
+    /* COLUNA DIREITA – Portfólio PSNE melhorado */
+    .right{ grid-column:2; grid-row:2/4; display:grid; }
+    .psne{ display:flex; flex-direction:column; justify-content:center; align-items:stretch; gap:16px; padding:26px; }
+    .psne h2{ margin:0; font-size:2.1vw; letter-spacing:.2px; text-align:center; }
+    .psne .subtitle{ text-align:center; font-size:1.1vw; color:var(--muted); margin-top:-4px; }
+    .product-grid{ display:grid; grid-template-columns: repeat(3, 1fr); gap:14px; margin-top:8px; }
+    .pill{ background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.22); border-radius:16px; padding:14px 12px; font-size:1.1vw; font-weight:700; text-align:center; }
+    .meta{ font-size:.95vw; opacity:.85; font-weight:600; }
 
-    /* Coluna Direita – bloco grande de soluções */
-    .right{
-      grid-column:2; grid-row:2 / 4; display:grid;
-    }
-    .psne{
-      display:flex; flex-direction:column; justify-content:center; align-items:center; gap: 18px; padding: 28px;
-    }
-    .psne h2{ font-size:2.2vw; margin:0 0 6px 0; letter-spacing: .3px; }
-    .psne .items{ display:grid; grid-template-columns: repeat(2, 1fr); gap: 14px; width:100%; }
-    .psne .pill{
-      background: rgba(255,255,255,.08);
-      border: 1px solid rgba(255,255,255,.2);
-      border-radius: 16px;
-      padding: 12px 14px; font-size: 1.15vw; font-weight:600; text-align:center;
-    }
+    .fade{ animation:fade .6s ease both; }
+    @keyframes fade{ from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:translateY(0)} }
 
-    /* Logo box – permita imagem real se desejar */
-    .logo{ gap:10px; }
-    .logo .mark{ width:80%; aspect-ratio: 3/1; border-radius: 14px; background: rgba(255,255,255,.08); border:1px dashed rgba(255,255,255,.25); display:grid; place-items:center; font-weight:800; font-size:1.4vw; }
-
-    /* Roteadores de conteúdo (animação leve de fade) */
-    .fade{ animation: fade .6s ease both; }
-    @keyframes fade{ from{ opacity:0; transform:translateY(6px) } to{ opacity:1; transform:translateY(0) } }
-
-    /* Rodapé opcional para créditos/versão */
-    .footer{
-      position: absolute; right: 20px; bottom: 12px; opacity:.35; font-size:.9vw; letter-spacing:.2px;
-    }
-
-    /* Evitar seleção acidental em telas touch */
+    .footer{ position:absolute; right:18px; bottom:10px; opacity:.35; font-size:.9vw; }
     *{ user-select:none; }
   </style>
 </head>
@@ -108,169 +70,149 @@
   <div class="frame">
     <main class="canvas">
 
-      <!-- TOP BAR -->
+      <!-- TOPO -->
       <section class="topbar">
-        <div class="card logo" id="logoBox">
+        <div class="card" id="logoBox">
           <div class="label">LOGO</div>
-          <div class="mark" id="logoMark">PSNE</div>
+          <div class="value" id="logoText" style="font-size:1.5vw">PSNE</div>
         </div>
-
         <div class="card" id="clockBox">
           <div class="label">HORA</div>
           <div class="value" id="clock">00:00</div>
           <div class="label" style="margin-top:.35em">DATA</div>
           <div class="value" id="date">—</div>
         </div>
-
-        <div class="card">
-          <div class="label">USD‑REAL</div>
-          <div class="value" id="usdbrl">5,36</div>
-        </div>
-
-        <div class="card">
-          <div class="label">BTC‑USD</div>
-          <div class="value" id="btcusd">106.000,00</div>
-        </div>
-
-        <div class="card">
-          <div class="label">Temperatura</div>
-          <div class="value" id="temp">— ºC</div>
-        </div>
-
-        <div class="card">
-          <div class="label">Vento</div>
-          <div class="value" id="wind">— km/h</div>
-        </div>
-
-        <div class="card">
-          <div class="label">Chuva</div>
-          <div class="value" id="rain">— %</div>
-        </div>
+        <div class="card"><div class="label">USD‑REAL</div><div class="value" id="usdbrl">5,36</div></div>
+        <div class="card"><div class="label">BTC‑USD</div><div class="value" id="btcusd">106.000,00</div></div>
+        <div class="card"><div class="label">Temperatura</div><div class="value" id="temp">— ºC</div></div>
+        <div class="card"><div class="label">Vento</div><div class="value" id="wind">— km/h</div></div>
+        <div class="card"><div class="label">Chuva</div><div class="value" id="rain">— %</div></div>
       </section>
 
-      <!-- COLUNA ESQUERDA (Manchete + Imagem) -->
+      <!-- COLUNA ESQUERDA: notícias (3 manchetes) + área visual -->
       <section class="left">
-        <div class="card headline" id="headline">Manchete Randômica</div>
-        <div class="card headline-img" id="headlineImage">
-          <img id="headlineImgEl" alt="Imagem da Manchete" src="" onerror="this.style.display='none'">
+        <div class="card news">
+          <h2>Notícias em destaque</h2>
+          <div class="news-grid" id="newsGrid">
+            <div class="headline">Manchete 1</div>
+            <div class="headline">Manchete 2</div>
+            <div class="headline">Manchete 3</div>
+          </div>
+        </div>
+        <div class="card visual">
+          <img id="visualImg" alt="Banner/Imagem" src="" onerror="this.style.display='none'">
         </div>
       </section>
 
-      <!-- COLUNA DIREITA (Soluções PSNE) -->
+      <!-- COLUNA DIREITA: Portfólio PSNE (melhorado) -->
       <section class="right">
         <div class="card psne" id="psneBlock">
-          <h2 id="psneTitle">Soluções PSNE</h2>
-          <div class="items" id="psneItems">
+          <h2 id="psneTitle">Portfólio PSNE</h2>
+          <div class="subtitle" id="psneSub">Carrier‑Class Networking • Observabilidade • Automação</div>
+          <div class="product-grid" id="productGrid">
             <div class="pill">Consultoria & Arquitetura</div>
-            <div class="pill">Implantação Multivendor</div>
-            <div class="pill">Venda de Soluções</div>
-            <div class="pill">Suporte & Sustentação</div>
-            <div class="pill">NOC 24x7 (Observer)</div>
+            <div class="pill">Assessments Especializados</div>
+            <div class="pill">HLD/LLD & Roadmaps</div>
+            <div class="pill">Implantação Multi‑Vendor</div>
+            <div class="pill">Super Core Service (EVPN/MPLS/SRv6)</div>
+            <div class="pill">BNG & CGNAT (IPoE/PPP)</div>
+            <div class="pill">PSNE‑CSOS (AIOps/Observer)</div>
+            <div class="pill">FinOps de Rede & Dashboards</div>
             <div class="pill">Serviços de Campo & DWDM</div>
           </div>
+          <div class="meta" id="psneMeta">Rotaciona a cada 10s com outros conjuntos de produtos</div>
         </div>
       </section>
 
     </main>
-    <div class="footer" id="footer">PSNE Digital Signage • v1.0</div>
+    <div class="footer">PSNE Digital Signage • v1.1 (42")</div>
   </div>
 
   <script>
-    // ================ RELÓGIO E DATA ================
-    const pad = n => String(n).padStart(2,'0');
+    // ==== Relógio/Data ====
+    const pad=n=>String(n).padStart(2,'0');
     function tick(){
-      const now = new Date();
-      const hh = pad(now.getHours());
-      const mm = pad(now.getMinutes());
-      document.getElementById('clock').textContent = `${hh}:${mm}`;
-
-      const opts = {weekday:'short', day:'2-digit', month:'short', year:'numeric'};
+      const now=new Date();
+      document.getElementById('clock').textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+      const opts={weekday:'short', day:'2-digit', month:'short', year:'numeric'};
       document.getElementById('date').textContent = now.toLocaleDateString('pt-BR', opts).replaceAll('.', '');
     }
-    tick(); setInterval(tick, 1000*15); // atualiza a cada 15s
+    tick(); setInterval(tick, 15000);
 
-    // ================ PLACEHOLDERS DE DADOS ================
-    // Você pode integrar APIs e preencher os campos abaixo.
-    const weather = { temp: '26 ºC', wind: '11 km/h', rain: '20 %' };
-    document.getElementById('temp').textContent = weather.temp;
-    document.getElementById('wind').textContent = weather.wind;
-    document.getElementById('rain').textContent = weather.rain;
+    // ==== Placeholders de clima/cotação (substitua por APIs) ====
+    document.getElementById('temp').textContent='26 ºC';
+    document.getElementById('wind').textContent='11 km/h';
+    document.getElementById('rain').textContent='20 %';
 
-    // ================ ROTATOR DE NOTÍCIAS (2 por vez opcional) ================
-    // Conteúdos de exemplo — substitua por feed real.
-    const news = [
-      { title: 'Operadoras aceleram 800G no backbone', img: '' },
-      { title: 'PSNE entrega assessment de rede em 8 semanas', img: '' },
-      { title: 'Arista cresce no Brasil com ecossistema PSNE', img: '' },
-      { title: 'Nova arquitetura de BNG reduz churn em 12%', img: '' },
+    // ==== Notícias: mostrar 3 simultâneas e rotacionar em grupos ====
+    const newsFeed=[
+      'Operadoras aceleram 800G no backbone',
+      'PSNE conclui assessment em 8 semanas',
+      'Arista cresce no Brasil com PSNE',
+      'BNG resiliente reduz churn em 12%',
+      'Anycast DNS amplia QoE em OTT',
+      'Automação CloudVision reduz Opex'
     ];
-    let newsIdx = 0;
-    function swapHeadline(){
-      const h = document.getElementById('headline');
-      const img = document.getElementById('headlineImgEl');
-      const n = news[newsIdx % news.length];
-      h.textContent = n.title;
-      h.classList.remove('fade'); void h.offsetWidth; h.classList.add('fade');
-      if(n.img){ img.src = n.img; img.style.display='block'; }
-      else { img.style.display='none'; }
-      newsIdx++;
+    let newsOffset=0;
+    function renderNews(){
+      const grid=document.getElementById('newsGrid');
+      const items=[0,1,2].map(i=> newsFeed[(newsOffset+i)%newsFeed.length]);
+      grid.innerHTML=items.map(t=>`<div class="headline fade">${t}</div>`).join('');
+      newsOffset = (newsOffset+3)%newsFeed.length;
     }
-    swapHeadline(); setInterval(swapHeadline, 10000); // 10s
+    renderNews(); setInterval(renderNews, 10000); // a cada 10s troca o trio
 
-    // ================ ROTATOR DE SOLUÇÕES PSNE (a cada 10s) ================
-    const psneSlides = [
+    // ==== Visual opcional (banner) ====
+    const banners=[ '' /* coloque URLs aqui */ ];
+    let b=0; function renderBanner(){
+      const el=document.getElementById('visualImg');
+      if(!banners.length){ el.style.display='none'; return; }
+      el.src=banners[b % banners.length]; el.style.display='block'; b++;
+    }
+    renderBanner();
+
+    // ==== PSNE: slides de produtos melhorados ====
+    const productSlides=[
       {
-        title:'Soluções PSNE',
+        title:'Portfólio PSNE', sub:'Carrier‑Class Networking • Observabilidade • Automação',
         items:[
-          'Consultoria & Arquitetura',
-          'Implantação Multivendor',
-          'Venda de Soluções',
-          'Suporte & Sustentação',
-          'NOC 24x7 (Observer)',
-          'Serviços de Campo & DWDM'
+          'Consultoria & Arquitetura', 'Assessments Especializados', 'HLD/LLD & Roadmaps',
+          'Implantação Multi‑Vendor', 'Super Core Service (EVPN/MPLS/SRv6)', 'BNG & CGNAT (IPoE/PPP)',
+          'PSNE‑CSOS (AIOps/Observer)', 'FinOps de Rede & Dashboards', 'Serviços de Campo & DWDM'
         ]
       },
       {
-        title:'PSNE‑CSOS (Cognitive Service OS)',
+        title:'PSNE‑CSOS (Cognitive Service OS)', sub:'AIOps • Observabilidade • Runbooks Inteligentes',
         items:[
-          'AIOps + Runbooks Inteligentes',
-          'Observabilidade ponta‑a‑ponta',
-          'FinOps de Rede',
-          'Dashboards QoS/QoE',
-          'Prevenção de Churn',
-          'Automação CloudVision'
+          'Data Lake Operacional', 'Dashboards QoS/QoE', 'Anomalias & RCA Automático',
+          'Playbooks de Mitigação', 'Integração CloudVision/Telemetry', 'Prevenção de Churn',
+          'SLA/SLO em Tempo Real', 'FinOps de Capacidade', 'APIs para OSS/BSS'
         ]
       },
       {
-        title:'Super Core Service',
+        title:'Super Core Service', sub:'Design • Migração • Operação Assistida',
         items:[
-          'EVPN/VXLAN • MPLS • BGP',
-          'IPoE/PPP • BNG/CGNAT',
-          'SRv6 • Anycast DNS',
-          'Hardening & Segurança',
-          'IPv6 em toda a rede',
-          'Arquitetura Carrier‑Class'
+          'EVPN/VXLAN • MPLS • SRv6', 'Arquitetura BGP/IGP', 'IPv6 End‑to‑End',
+          'DNS Anycast', 'Hardening & Segurança', 'Lab Interop Multi‑Vendor',
+          'Planos de Migração (JM)', 'Documentação e Runbooks', 'Treinamento Sob Medida'
         ]
       }
     ];
-
-    let slide = 0;
-    function renderPSNE(){
-      const data = psneSlides[slide % psneSlides.length];
-      document.getElementById('psneTitle').textContent = data.title;
-      const box = document.getElementById('psneItems');
-      box.innerHTML = data.items.map(t=>`<div class="pill">${t}</div>`).join('');
-      const container = document.getElementById('psneBlock');
-      container.classList.remove('fade'); void container.offsetWidth; container.classList.add('fade');
+    let slide=0;
+    function renderProducts(){
+      const s=productSlides[slide % productSlides.length];
+      document.getElementById('psneTitle').textContent=s.title;
+      document.getElementById('psneSub').textContent=s.sub;
+      document.getElementById('productGrid').innerHTML=s.items.map(t=>`<div class='pill fade'>${t}</div>`).join('');
+      document.getElementById('psneMeta').textContent='';
       slide++;
     }
-    renderPSNE(); setInterval(renderPSNE, 10000); // 10s
+    renderProducts(); setInterval(renderProducts, 10000); // 10s
 
-    // ================ PERSONALIZAÇÃO RÁPIDA POR PARAMS (opcional) ================
-    // Ex.: ?logo=PSNE%20Observer
+    // ==== Personalização via querystring (ex.: ?logo=PSNE%%20Observer) ====
     const params = new URLSearchParams(location.search);
     const logo = params.get('logo');
-    if(logo) document.getElementById('logoMark').textContent = logo;
+    if(logo) document.getElementById('logoText').textContent = logo;
   </script>
 </body>
 </html>
