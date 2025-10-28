@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PSNE | Digital Signage 16:9</title>
+  <style>
+    :root{
+      --bg:#0e4a5c;      /* fundo dos cards */
+      --fg:#d6eef6;      /* textos */
+      --page:#062f3a;    /* fundo geral */
+      --border: #84a9b8; /* borda suave */
+      --gap: 18px;       /* espaçamento entre cards */
+      --radius: 28px;    /* cantos arredondados */
+      --shadow: 0 0 0 4px rgba(132,169,184,.18) inset, 0 14px 30px rgba(0,0,0,.25);
+      --accent:#bde0ea;
+    }
+
+    html,body{
+      height:100%;
+      margin:0;
+      background:var(--page);
+      color:var(--fg);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, 'Helvetica Neue', Arial, "Noto Sans", sans-serif;
+      overflow:hidden; /* TV full screen */
+    }
+
+    /* Wrapper 16:9 seguro que escala ocupando a tela inteira */
+    .frame{
+      position:fixed; inset:0; display:grid; place-items:center;
+    }
+    .canvas{
+      width:100vw; height:56.25vw; /* 16:9 = 9/16 = .5625 */
+      max-height:100vh; max-width:177.78vh; /* mantém 16:9 preenchendo a tela */
+      aspect-ratio:16/9;
+      display:grid;
+      grid-template-columns: 40% 60%;
+      grid-template-rows: auto 1fr 1.2fr; /* topo, manchete/img, bloco PSNE ocupa 2 linhas no lado direito */
+      gap: var(--gap);
+      padding: var(--gap);
+      box-sizing: border-box;
+    }
+
+    /* Faixa Superior (dentro da coluna esquerda e direita, mas em toda a largura) */
+    .topbar{
+      grid-column: 1 / 3;
+      display:grid;
+      grid-template-columns: 15% 22% 12% 12% 16% 11% 12%;
+      gap: var(--gap);
+    }
+
+    .card{
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px 22px;
+      display:flex; flex-direction:column; justify-content:center; align-items:center;
+      text-align:center;
+    }
+    .card .label{ font-size: 1.45vw; font-weight: 700; letter-spacing:.4px; opacity:.85; }
+    .card .value{ font-size: 1.9vw; font-weight: 700; margin-top: .35em; }
+
+    /* Coluna Esquerda */
+    .left{
+      grid-column:1; display:grid; grid-template-rows: auto 1fr; gap: var(--gap);
+    }
+
+    .headline{ display:flex; align-items:center; justify-content:center; font-size:2.2vw; font-weight:800; padding: 28px; }
+
+    .headline-img{ display:flex; align-items:center; justify-content:center; font-size:1.6vw; }
+    .headline-img img{ width:100%; height:100%; object-fit:cover; border-radius: calc(var(--radius) - 6px); filter: contrast(1.02) saturate(1.05); }
+
+    /* Coluna Direita – bloco grande de soluções */
+    .right{
+      grid-column:2; grid-row:2 / 4; display:grid;
+    }
+    .psne{
+      display:flex; flex-direction:column; justify-content:center; align-items:center; gap: 18px; padding: 28px;
+    }
+    .psne h2{ font-size:2.2vw; margin:0 0 6px 0; letter-spacing: .3px; }
+    .psne .items{ display:grid; grid-template-columns: repeat(2, 1fr); gap: 14px; width:100%; }
+    .psne .pill{
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 16px;
+      padding: 12px 14px; font-size: 1.15vw; font-weight:600; text-align:center;
+    }
+
+    /* Logo box – permita imagem real se desejar */
+    .logo{ gap:10px; }
+    .logo .mark{ width:80%; aspect-ratio: 3/1; border-radius: 14px; background: rgba(255,255,255,.08); border:1px dashed rgba(255,255,255,.25); display:grid; place-items:center; font-weight:800; font-size:1.4vw; }
+
+    /* Roteadores de conteúdo (animação leve de fade) */
+    .fade{ animation: fade .6s ease both; }
+    @keyframes fade{ from{ opacity:0; transform:translateY(6px) } to{ opacity:1; transform:translateY(0) } }
+
+    /* Rodapé opcional para créditos/versão */
+    .footer{
+      position: absolute; right: 20px; bottom: 12px; opacity:.35; font-size:.9vw; letter-spacing:.2px;
+    }
+
+    /* Evitar seleção acidental em telas touch */
+    *{ user-select:none; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <main class="canvas">
+
+      <!-- TOP BAR -->
+      <section class="topbar">
+        <div class="card logo" id="logoBox">
+          <div class="label">LOGO</div>
+          <div class="mark" id="logoMark">PSNE</div>
+        </div>
+
+        <div class="card" id="clockBox">
+          <div class="label">HORA</div>
+          <div class="value" id="clock">00:00</div>
+          <div class="label" style="margin-top:.35em">DATA</div>
+          <div class="value" id="date">—</div>
+        </div>
+
+        <div class="card">
+          <div class="label">USD‑REAL</div>
+          <div class="value" id="usdbrl">5,36</div>
+        </div>
+
+        <div class="card">
+          <div class="label">BTC‑USD</div>
+          <div class="value" id="btcusd">106.000,00</div>
+        </div>
+
+        <div class="card">
+          <div class="label">Temperatura</div>
+          <div class="value" id="temp">— ºC</div>
+        </div>
+
+        <div class="card">
+          <div class="label">Vento</div>
+          <div class="value" id="wind">— km/h</div>
+        </div>
+
+        <div class="card">
+          <div class="label">Chuva</div>
+          <div class="value" id="rain">— %</div>
+        </div>
+      </section>
+
+      <!-- COLUNA ESQUERDA (Manchete + Imagem) -->
+      <section class="left">
+        <div class="card headline" id="headline">Manchete Randômica</div>
+        <div class="card headline-img" id="headlineImage">
+          <img id="headlineImgEl" alt="Imagem da Manchete" src="" onerror="this.style.display='none'">
+        </div>
+      </section>
+
+      <!-- COLUNA DIREITA (Soluções PSNE) -->
+      <section class="right">
+        <div class="card psne" id="psneBlock">
+          <h2 id="psneTitle">Soluções PSNE</h2>
+          <div class="items" id="psneItems">
+            <div class="pill">Consultoria & Arquitetura</div>
+            <div class="pill">Implantação Multivendor</div>
+            <div class="pill">Venda de Soluções</div>
+            <div class="pill">Suporte & Sustentação</div>
+            <div class="pill">NOC 24x7 (Observer)</div>
+            <div class="pill">Serviços de Campo & DWDM</div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+    <div class="footer" id="footer">PSNE Digital Signage • v1.0</div>
+  </div>
+
+  <script>
+    // ================ RELÓGIO E DATA ================
+    const pad = n => String(n).padStart(2,'0');
+    function tick(){
+      const now = new Date();
+      const hh = pad(now.getHours());
+      const mm = pad(now.getMinutes());
+      document.getElementById('clock').textContent = `${hh}:${mm}`;
+
+      const opts = {weekday:'short', day:'2-digit', month:'short', year:'numeric'};
+      document.getElementById('date').textContent = now.toLocaleDateString('pt-BR', opts).replaceAll('.', '');
+    }
+    tick(); setInterval(tick, 1000*15); // atualiza a cada 15s
+
+    // ================ PLACEHOLDERS DE DADOS ================
+    // Você pode integrar APIs e preencher os campos abaixo.
+    const weather = { temp: '26 ºC', wind: '11 km/h', rain: '20 %' };
+    document.getElementById('temp').textContent = weather.temp;
+    document.getElementById('wind').textContent = weather.wind;
+    document.getElementById('rain').textContent = weather.rain;
+
+    // ================ ROTATOR DE NOTÍCIAS (2 por vez opcional) ================
+    // Conteúdos de exemplo — substitua por feed real.
+    const news = [
+      { title: 'Operadoras aceleram 800G no backbone', img: '' },
+      { title: 'PSNE entrega assessment de rede em 8 semanas', img: '' },
+      { title: 'Arista cresce no Brasil com ecossistema PSNE', img: '' },
+      { title: 'Nova arquitetura de BNG reduz churn em 12%', img: '' },
+    ];
+    let newsIdx = 0;
+    function swapHeadline(){
+      const h = document.getElementById('headline');
+      const img = document.getElementById('headlineImgEl');
+      const n = news[newsIdx % news.length];
+      h.textContent = n.title;
+      h.classList.remove('fade'); void h.offsetWidth; h.classList.add('fade');
+      if(n.img){ img.src = n.img; img.style.display='block'; }
+      else { img.style.display='none'; }
+      newsIdx++;
+    }
+    swapHeadline(); setInterval(swapHeadline, 10000); // 10s
+
+    // ================ ROTATOR DE SOLUÇÕES PSNE (a cada 10s) ================
+    const psneSlides = [
+      {
+        title:'Soluções PSNE',
+        items:[
+          'Consultoria & Arquitetura',
+          'Implantação Multivendor',
+          'Venda de Soluções',
+          'Suporte & Sustentação',
+          'NOC 24x7 (Observer)',
+          'Serviços de Campo & DWDM'
+        ]
+      },
+      {
+        title:'PSNE‑CSOS (Cognitive Service OS)',
+        items:[
+          'AIOps + Runbooks Inteligentes',
+          'Observabilidade ponta‑a‑ponta',
+          'FinOps de Rede',
+          'Dashboards QoS/QoE',
+          'Prevenção de Churn',
+          'Automação CloudVision'
+        ]
+      },
+      {
+        title:'Super Core Service',
+        items:[
+          'EVPN/VXLAN • MPLS • BGP',
+          'IPoE/PPP • BNG/CGNAT',
+          'SRv6 • Anycast DNS',
+          'Hardening & Segurança',
+          'IPv6 em toda a rede',
+          'Arquitetura Carrier‑Class'
+        ]
+      }
+    ];
+
+    let slide = 0;
+    function renderPSNE(){
+      const data = psneSlides[slide % psneSlides.length];
+      document.getElementById('psneTitle').textContent = data.title;
+      const box = document.getElementById('psneItems');
+      box.innerHTML = data.items.map(t=>`<div class="pill">${t}</div>`).join('');
+      const container = document.getElementById('psneBlock');
+      container.classList.remove('fade'); void container.offsetWidth; container.classList.add('fade');
+      slide++;
+    }
+    renderPSNE(); setInterval(renderPSNE, 10000); // 10s
+
+    // ================ PERSONALIZAÇÃO RÁPIDA POR PARAMS (opcional) ================
+    // Ex.: ?logo=PSNE%20Observer
+    const params = new URLSearchParams(location.search);
+    const logo = params.get('logo');
+    if(logo) document.getElementById('logoMark').textContent = logo;
+  </script>
+</body>
+</html>
